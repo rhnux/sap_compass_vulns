@@ -25,19 +25,18 @@ df.info()
 @st.cache_data
 def sap_cve_top_priority():
     sap_cve_top = df[(df['priority_l'] == 'A+') | (df['priority'] == 'Priority 1+')]
-    # cve list
-    cves = sap_cve_top.cve_id.unique().tolist()
-    string_list = [str(element) for element in cves]
-    delimiter = " "
-    result_string = delimiter.join(string_list)
-    #print(result_string)
-    epss_history = []
-    for cve in cves:
+    col_epss_hist = []
+    for index, row in sap_cve_top.iterrows():
+        cve = row['cve_id']
         r = httpx.get(f'https://api.first.org/data/v1/epss?cve={cve}&scope=time-series')
-        cve_ts = r.json()['data'][0]
-        epss_history.append(cve_ts)
-    r.close()
-    return sap_cve_top, result_string, epss_history
+        epss_ts = r.json()['data'][0]
+        epss_hist = []
+        for l in epss_ts['time-series']:
+            epss_hist.append(float(l['epss'])*100)
+            
+        epss_hist.reverse()
+        col_epss_hist.append(epss_hist)
+    return sap_cve_top, col_epss_hist
 
 
 st.set_page_config(
@@ -67,9 +66,26 @@ priority_filter = st.sidebar.multiselect("Select SAP Priority Level", df['Priori
 on = st.sidebar.toggle("Priority Top 20")
 
 if on:
-    epps_h = sap_cve_top_priority()
+    epss_h = sap_cve_top_priority()
+    sap_cve_top25 = epss_h[0].copy()
+    sap_cve_top25 = sap_cve_top25.assign(epss_l_30 = epss_h[1])
     st.title("Top 20 SAP Priority Vulnerabilities")
-    st.json(epps_h[2])
+    sap_cve_top252 = sap_cve_top25[['Note#','cve_id','priority_l',
+                                    'priority','cvss','epss_l_30','cweId']]
+    st.dataframe(sap_cve_top252,
+                column_config = {
+                     "Note#": "SAP Note#",
+                     "cve_id": "cve_id",
+                     "priority_l": "priority_l",
+                     "priority": "priority",
+                     "cvss": "cvssScore",
+                     "epss_l_30": st.column_config.AreaChartColumn("EPSS (Last 30 days)", y_min=0, y_max=100),
+                     "cweId": "CWE"
+                     },
+                hide_index=True,
+                )
+    #st.write(sap_cve_top25)
+    #st.json(epss_h[1])
 
 st.title("SAP Compass Priority Vulnerabilities")
 # Filter DataFrame based on selection
@@ -80,7 +96,17 @@ vulns = filtered_df.shape[0]
 
 st.subheader(f"Filtered Vulnerabilities | 🪲 :violet[{vulns}]")
 #st.write(filtered_df[['Note#', 'cve_id', 'description']])
-st.write(filtered_df[['Note#', 'cve_id', 'priority', 'priority_l', 'epss', 'cvss', 'kev', 'dateUpdated','product_l']])
+st.dataframe(filtered_df[['Note#', 'cve_id', 'priority', 'priority_l', 'epss', 'cvss', 'kev', 'dateUpdated','product_l']],
+             column_config={
+                 "epss": st.column_config.NumberColumn(
+                     "EPSS",
+                     min_value=0,
+                     max_value=100,
+                     step=1,
+                     format="%.2f",
+                     ),
+             },
+             hide_index=True)
 
 
 col1, col2 = st.columns(2, vertical_alignment="bottom")
@@ -88,8 +114,6 @@ col1, col2 = st.columns(2, vertical_alignment="bottom")
 with col1:
     # Show CVSS Distribution
     st.subheader("EPSS Score Distribution")
-    #fig_cvss = px.histogram(filtered_df, x="cvss", nbins=10, title="Distribution of CVSS Scores")
-    #st.plotly_chart(fig_cvss, use_container_width=True )
     chart_data = filtered_df[["cvss","epss","cve_id","Note#"]]
     st.scatter_chart(chart_data,
                     y="epss",

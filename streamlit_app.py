@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit_antd_components as sac
 import httpx
+import re
 
 # SAP Notes data loading
 
@@ -18,7 +19,9 @@ df['priority'] = df['priority'].astype('category')
 df['priority_l'] = df['priority_l'].astype('category')
 df['Priority'] = df['Priority'].astype('category')
 df['cvss_severity'] = df['cvss_severity'].astype('category')
-df['epss'] = (df['epss'] * 100).round(2)
+df['cveInfo'] = df['cve_id'].apply(lambda x: x.replace(f'{x}', f'https://www.cvedetails.com/cve/{x}'))
+df['NoteSAP'] = df['cve_id'].apply(lambda x: x.replace(f'{x}', f'https://me.sap.com/notes/{x}'))
+df['epss'] = df['epss'].map(lambda x: x * 100).astype('float').round(2)
 df.info()
 
 # Select A+|1+ CVEs & Get EPSS data of TOP Priorities CVEs
@@ -96,6 +99,8 @@ if on:
             st.scatter_chart(chart_data,
                             y="epss",
                             x="cvss",
+                            x_label="CVSS Score",
+                            y_label="EPSS %",
                             color="#ff1493",
                             use_container_width=True)
 
@@ -116,14 +121,23 @@ vulns = filtered_df.shape[0]
 
 st.subheader(f"Filtered Vulnerabilities | 🪲 :violet[{vulns}]")
 #st.write(filtered_df[['Note#', 'cve_id', 'description']])
-st.dataframe(filtered_df[['Note#', 'cve_id', 'priority', 'priority_l', 'epss', 'cvss', 'kev', 'dateUpdated','product_l']],
+st.dataframe(filtered_df[['Note#', 'cve_id', 'cveInfo', 'Priority', 'priority', 'priority_l',
+                          'epss', 'cvss', 'product_l']],
              column_config={
                  "epss": st.column_config.NumberColumn(
-                     "EPSS",
-                     min_value=0,
-                     max_value=100,
-                     step=1,
-                     format="%.2f",
+                     "EPSS %",
+                     help="Probabilidad para explotar la vulnerabilidad."
+             #        min_value=0,
+             #        max_value=100,
+                     #step=1,
+                     #format="%.2f",
+                     ),
+                 "cveInfo": st.column_config.LinkColumn(
+                     "cveInfo",
+                     help="CVE Details",
+                     #validate=r"^https://www.cvedetails.com/cve/[a-z]$",
+                     max_chars=50,
+                     display_text=r"(CVE-....-\d+)"
                      ),
              },
              hide_index=True)
@@ -138,6 +152,8 @@ with col1:
     st.scatter_chart(chart_data,
                     y="epss",
                     x="cvss",
+                    x_label="CVSS Score",
+                    y_label="EPSS %",
                     color="#ff1493",
                     use_container_width=True)
 

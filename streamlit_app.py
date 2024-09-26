@@ -14,13 +14,15 @@ df['dateUpdated'] = pd.to_datetime(df['dateUpdated'], format='mixed', utc=True)
 df.drop_duplicates(subset=['Note#'], inplace=True)
 
 df['sap_note_year'] = df['sap_note_year'].astype('category')
+df['year'] = pd.to_datetime(df['sap_note_year'], format='%Y', utc=True)
+print(df['year'])
 df['Note#'] = df['Note#'].astype('category')
 df['priority'] = df['priority'].astype('category')
 df['priority_l'] = df['priority_l'].astype('category')
 df['Priority'] = df['Priority'].astype('category')
 df['cvss_severity'] = df['cvss_severity'].astype('category')
 df['cveInfo'] = df['cve_id'].apply(lambda x: x.replace(f'{x}', f'https://www.cvedetails.com/cve/{x}'))
-df['cveSAP'] = df['cve_id'].apply(lambda x: x.replace(f'{x}', f'https://me.sap.com/notes/{x}'))
+df['cveSAP'] = df['cve_id'].apply(lambda x: x.replace(f'{x}', f'https://www.cve.org/CVERecord?id={x}'))
 df['epss'] = df['epss'].map(lambda x: x * 100).astype('float').round(2)
 df.info()
 
@@ -68,6 +70,15 @@ st.sidebar.header("Filters")
 priority_filter = st.sidebar.multiselect("Select SAP Priority Level", df['Priority'].unique(), default=df['Priority'].unique())
 filtered_df = df[df['Priority'].isin(priority_filter)]
 on = st.sidebar.toggle("Priority Top")
+st.sidebar.markdown('<div style="text-align: center;">Last updated 19-09-2024</div>', unsafe_allow_html=True)
+sentiment_mapping = [":red[:material/thumb_down:]", ":green[:material/thumb_up:]"]
+st.sidebar.markdown('<div style="text-align: justify;"></br></br>How do you like this app?</div>', unsafe_allow_html=True)
+selected = st.sidebar.feedback("thumbs")
+if selected is not None:
+   texto = '### You selected:'
+   vote = sentiment_mapping[selected]
+   st.sidebar.markdown(f'''{texto} {vote}''')
+
 
 if on:
     with st.container():
@@ -108,10 +119,12 @@ if on:
         with col2t25:
             # Potentially Display another chart (like by date)
             st.subheader("Vulns Date Updated")
-            sap_cve_top25['dateUpdated'] = pd.to_datetime(sap_cve_top25['dateUpdated'])
+            #sap_cve_top25['datePublished'] = pd.to_datetime(sap_cve_top25['datePublished'], format='%Y', utc=True)
+            #sap_cve_top25['yM'] = sap_cve_top25['dateUpdated'].values.astype('datetime64[D]')
             count_by_date = sap_cve_top25.groupby(sap_cve_top25['dateUpdated'].dt.date).size().reset_index(name='count')
-            st.bar_chart(count_by_date, y="count", x="dateUpdated",
-                        color="#04adbf", use_container_width=True)
+            count_by_date['count'].astype('int')
+            st.bar_chart(count_by_date, y="count", x="dateUpdated", x_label="CVE date Updated",
+                        color="#ba38f2", use_container_width=True)
 
 st.title("SAP Compass Priority Vulnerabilities")
 # Filter DataFrame based on selection
@@ -166,18 +179,19 @@ with col1:
 
 with col2:
     # Potentially Display another chart (like by date)
-    st.subheader("Vulns Date Published")
-    df['dateUpdated'] = pd.to_datetime(df['datePublished'])
-    count_by_date = df.groupby(df['datePublished'].dt.date).size().reset_index(name='count')
-    st.bar_chart(count_by_date, y="count", x="datePublished",
-                 color="#04adbf", use_container_width=True)
+    st.subheader("Vulns Year Published")
+    df['yp'] = df['datePublished'].values.astype('datetime64[Y]')
+    count_by_date = df.groupby(df['yp'].dt.date).size().reset_index(name='count')
+    print(count_by_date)
+    st.bar_chart(count_by_date, y="count", x="yp", x_label="CVE Year Published",
+                 color="#ba38f2", use_container_width=True)
 
 
 
 
 st.subheader("Parallel Category Diagram")
-dfp = filtered_df[['sap_note_year', 'priority_l','priority','Priority','cvss_severity']]
-#dfp['team'] = pd.factorize(dfp['sap_note_year'])[0]
+dfp = filtered_df[['sap_note_year','year','priority_l','priority','Priority','cvss_severity']]
+#dfp['team'] = pd.factorize(dfp['year'])[0].astype('int')
 fig_parallel = px.parallel_categories(
     dfp, dimensions=['sap_note_year','priority_l','priority','Priority','cvss_severity'],
     labels={'sap_note_year':'Year',

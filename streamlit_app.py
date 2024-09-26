@@ -63,14 +63,15 @@ sac.divider(label='SAP Compass Vulns', icon=sac.BsIcon(name='compass', size=25),
 st.sidebar.header("Filters")
 #priority_filter = st.sidebar.multiselect("Select Priority Level", df['priority_l'].unique(), default=df['priority_l'].unique())
 priority_filter = st.sidebar.multiselect("Select SAP Priority Level", df['Priority'].unique(), default=df['Priority'].unique())
-on = st.sidebar.toggle("Priority Top 20")
+on = st.sidebar.toggle("Priority Top")
 
 if on:
     with st.container():
         epss_h = sap_cve_top_priority()
         sap_cve_top25 = epss_h[0].copy()
         sap_cve_top25 = sap_cve_top25.assign(epss_l_30 = epss_h[1])
-        st.title("Top 20 SAP Priority Vulnerabilities")
+        top = sap_cve_top25.shape[0]
+        st.title(f":violet[Top {top}] SAP Priority Vulnerabilities")
         sap_cve_top252 = sap_cve_top25[['Note#','cve_id','priority_l',
                                         'priority','cvss','epss_l_30','cweId']]
         st.dataframe(sap_cve_top252,

@@ -7,7 +7,7 @@ import re
 
 # SAP Notes data loading
 
-df = pd.read_csv('data/sap_cve_last_01.csv', )
+df = pd.read_csv('data/sap_cve_last_02.csv', )
 df['datePublished'] = pd.to_datetime(df['datePublished'], format='mixed', utc=True)
 df['dateUpdated'] = pd.to_datetime(df['dateUpdated'], format='mixed', utc=True)
 
@@ -20,14 +20,14 @@ df['priority_l'] = df['priority_l'].astype('category')
 df['Priority'] = df['Priority'].astype('category')
 df['cvss_severity'] = df['cvss_severity'].astype('category')
 df['cveInfo'] = df['cve_id'].apply(lambda x: x.replace(f'{x}', f'https://www.cvedetails.com/cve/{x}'))
-df['NoteSAP'] = df['cve_id'].apply(lambda x: x.replace(f'{x}', f'https://me.sap.com/notes/{x}'))
+df['cveSAP'] = df['cve_id'].apply(lambda x: x.replace(f'{x}', f'https://me.sap.com/notes/{x}'))
 df['epss'] = df['epss'].map(lambda x: x * 100).astype('float').round(2)
 df.info()
 
 # Select A+|1+ CVEs & Get EPSS data of TOP Priorities CVEs
 @st.cache_data
-def sap_cve_top_priority():
-    sap_cve_top = df[(df['priority_l'] == 'A+') | (df['priority'] == 'Priority 1+')]
+def sap_cve_top_priority(xdf):
+    sap_cve_top = xdf[(xdf['priority_l'] == 'A+') | (xdf['priority'] == 'Priority 1+')]
     col_epss_hist = []
     for index, row in sap_cve_top.iterrows():
         cve = row['cve_id']
@@ -66,11 +66,12 @@ sac.divider(label='SAP Compass Vulns', icon=sac.BsIcon(name='compass', size=25),
 st.sidebar.header("Filters")
 #priority_filter = st.sidebar.multiselect("Select Priority Level", df['priority_l'].unique(), default=df['priority_l'].unique())
 priority_filter = st.sidebar.multiselect("Select SAP Priority Level", df['Priority'].unique(), default=df['Priority'].unique())
+filtered_df = df[df['Priority'].isin(priority_filter)]
 on = st.sidebar.toggle("Priority Top")
 
 if on:
     with st.container():
-        epss_h = sap_cve_top_priority()
+        epss_h = sap_cve_top_priority(filtered_df)
         sap_cve_top25 = epss_h[0].copy()
         sap_cve_top25 = sap_cve_top25.assign(epss_l_30 = epss_h[1])
         top = sap_cve_top25.shape[0]
@@ -108,20 +109,19 @@ if on:
             # Potentially Display another chart (like by date)
             st.subheader("Vulns Date Updated")
             sap_cve_top25['dateUpdated'] = pd.to_datetime(sap_cve_top25['dateUpdated'])
-            count_by_date = df.groupby(df['dateUpdated'].dt.date).size().reset_index(name='count')
+            count_by_date = sap_cve_top25.groupby(sap_cve_top25['dateUpdated'].dt.date).size().reset_index(name='count')
             st.bar_chart(count_by_date, y="count", x="dateUpdated",
                         color="#04adbf", use_container_width=True)
 
 st.title("SAP Compass Priority Vulnerabilities")
 # Filter DataFrame based on selection
 #filtered_df = df[df['priority_l'].isin(priority_filter)]
-filtered_df = df[df['Priority'].isin(priority_filter)]
 
 vulns = filtered_df.shape[0]
 
 st.subheader(f"Filtered Vulnerabilities | 🪲 :violet[{vulns}]")
 #st.write(filtered_df[['Note#', 'cve_id', 'description']])
-st.dataframe(filtered_df[['Note#', 'cve_id', 'cveInfo', 'Priority', 'priority', 'priority_l',
+st.dataframe(filtered_df[['Note#', 'cveInfo', 'cveSAP', 'Priority', 'priority', 'priority_l',
                           'epss', 'cvss', 'product_l']],
              column_config={
                  "epss": st.column_config.NumberColumn(
@@ -135,6 +135,13 @@ st.dataframe(filtered_df[['Note#', 'cve_id', 'cveInfo', 'Priority', 'priority', 
                  "cveInfo": st.column_config.LinkColumn(
                      "cveInfo",
                      help="CVE Details",
+                     #validate=r"^https://www.cvedetails.com/cve/[a-z]$",
+                     max_chars=50,
+                     display_text=r"(CVE-....-\d+)"
+                     ),
+                 "cveSAP": st.column_config.LinkColumn(
+                     "cveSAP",
+                     help="CVE SAP Details",
                      #validate=r"^https://www.cvedetails.com/cve/[a-z]$",
                      max_chars=50,
                      display_text=r"(CVE-....-\d+)"
@@ -159,17 +166,18 @@ with col1:
 
 with col2:
     # Potentially Display another chart (like by date)
-    st.subheader("Vulns Date Updated")
-    df['dateUpdated'] = pd.to_datetime(df['dateUpdated'])
-    count_by_date = df.groupby(df['dateUpdated'].dt.date).size().reset_index(name='count')
-    st.bar_chart(count_by_date, y="count", x="dateUpdated",
+    st.subheader("Vulns Date Published")
+    df['dateUpdated'] = pd.to_datetime(df['datePublished'])
+    count_by_date = df.groupby(df['datePublished'].dt.date).size().reset_index(name='count')
+    st.bar_chart(count_by_date, y="count", x="datePublished",
                  color="#04adbf", use_container_width=True)
 
 
 
 
 st.subheader("Parallel Category Diagram")
-dfp = filtered_df[['sap_note_year','priority_l','priority','Priority','cvss_severity']]
+dfp = filtered_df[['sap_note_year', 'priority_l','priority','Priority','cvss_severity']]
+#dfp['team'] = pd.factorize(dfp['sap_note_year'])[0]
 fig_parallel = px.parallel_categories(
     dfp, dimensions=['sap_note_year','priority_l','priority','Priority','cvss_severity'],
     labels={'sap_note_year':'Year',
@@ -177,8 +185,9 @@ fig_parallel = px.parallel_categories(
             'priority':'CVE-Prioritizer',
             'Priority':'SAP',
             'cvss_severity':'cvssSeverity'},
-            color=dfp['sap_note_year'],   
-            color_continuous_scale="magenta")
+            color=dfp['sap_note_year'],
+            #range_color=year_c[1])  '#4e79a7' #5f45bf '#3b2e8c'
+            color_continuous_scale=['#5f45bf','#04adbf','#ba38f2','#ff1493'])
 
 st.plotly_chart(fig_parallel, theme=None, use_container_width=True)
 

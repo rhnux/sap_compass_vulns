@@ -162,7 +162,7 @@ cython_debug/
 #.idea/
 
 # Streamlit
-.streamlit
+.streamlit/secrets.toml
 
 # Vercel
 =======

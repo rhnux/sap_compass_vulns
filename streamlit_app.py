@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit_antd_components as sac
 import httpx
 import re
@@ -51,8 +53,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-LOGO_URL_LARGE = "https://dso-days-siteblog.vercel.app/assets/logo.png"
-LOGO_URL_SMALL = "https://dso-days-siteblog.vercel.app/assets/logo.png"
+LOGO_URL_LARGE = "assets/logo.png"
+LOGO_URL_SMALL = "assets/logo.png"
 
 logo_SAP = 'assets/sap.png'
 
@@ -80,6 +82,9 @@ if selected is not None:
    st.sidebar.markdown(f'''{texto} {vote}''')
 
 # Start View
+# colors: #161c2c #515373 #5eadf2 #5f45bf #3b2e8c 
+# #ba38f2 #165f8c #f22ed2 #515373 #39bb9e #04adbf
+
 st.title("SAP Compass Priority Vulnerabilities")
 
 st.header(f"From January 2021 to date, :blue[{df.shape[0]} SAP Notes] related to :orange[{len(df['cve_id'].unique())} CVE-IDs] are reported.")
@@ -92,9 +97,12 @@ if on:
         sap_cve_top25 = epss_h[0].copy()
         sap_cve_top25 = sap_cve_top25.assign(epss_l_30 = epss_h[1])
         top = sap_cve_top25.shape[0]
-        tab1, tab2 = st.tabs(["Vunls Top Priority", "Top vs SAP Priority"])
+        top_vs = sap_cve_top25.drop_duplicates(subset=['cve_id'])
+        kev = top_vs.loc[(top_vs['kev'] == True)]
+        tab1, tab2 = st.tabs(["Vunls Top Priority", "Top CVE-IDs"])
         with tab1:
-            st.header(f":violet[Top {top}] SAP Priority Vulnerabilities")
+            st.header(f":violet[Top {top}] Priority Vulnerabilities of :blue[{filtered_df.shape[0]}] selected SAP Notes")
+            st.header(f':orange[{top_vs.shape[0]} Unique CVE-IDs] | :red[{kev.shape[0]} on KEV]')
             sap_cve_top252 = sap_cve_top25[['Note#','cve_id','priority_l',
                                             'priority','cvss','kev','epss_l_30','cweId']]
             st.dataframe(sap_cve_top252,
@@ -135,10 +143,10 @@ if on:
                 st.bar_chart(count_by_date, y="count", x="dateUpdated", x_label="CVE date Updated",
                             color="#ba38f2", use_container_width=True)
         with tab2:
-            st.subheader('Top vs SAP Priority')
-            top_vs = sap_cve_top25.drop_duplicates(subset=['cve_id'])
+            st.subheader('Top CVEs')
+            #top_vs = sap_cve_top25.drop_duplicates(subset=['cve_id'])
             st.subheader(f'CVE-IDs Unique {top_vs.shape[0]}')
-            kev = top_vs.loc[(top_vs['kev'] == True)]
+            #kev = top_vs.loc[(top_vs['kev'] == True)]
             st.subheader(f':red[KEV {kev.shape[0]}]')
             with st.expander('Top CVE'):
                 st.dataframe(top_vs[['cve_id','Priority','priority','priority_l','epss','epss_l_30','cvss','kev','cweId']],
@@ -215,7 +223,7 @@ st.subheader("Parallel Category Diagram")
 dfp = filtered_df[['sap_note_year','year','priority_l','priority','Priority','cvss_severity']]
 #dfp['team'] = pd.factorize(dfp['year'])[0].astype('int')
 fig_parallel = px.parallel_categories(
-    dfp, dimensions=['sap_note_year','priority_l','priority','Priority','cvss_severity'],
+    dfp, dimensions=['sap_note_year','Priority','cvss_severity','priority_l','priority'],
     labels={'sap_note_year':'Year',
             'priority_l':'SploitScan',
             'priority':'CVE-Prioritizer',
@@ -223,10 +231,12 @@ fig_parallel = px.parallel_categories(
             'cvss_severity':'cvssSeverity'},
             color=dfp['sap_note_year'],
             #range_color=year_c[1])  '#4e79a7' #5f45bf '#3b2e8c'
-            color_continuous_scale=['#5f45bf','#04adbf','#ba38f2','#ff1493'])
+            color_continuous_scale=['#5f45bf','#3b2e8c','#ba38f2','#ff1493'],
+            color_continuous_midpoint=2022)
 st.plotly_chart(fig_parallel, theme=None, use_container_width=True)
 
 
 with st.expander("Dataset Filtered Vulnerabilities"):
     st.subheader("Filtered Vulnerabilities")
     st.write(filtered_df)
+

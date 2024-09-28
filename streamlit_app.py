@@ -79,6 +79,12 @@ if selected is not None:
    vote = sentiment_mapping[selected]
    st.sidebar.markdown(f'''{texto} {vote}''')
 
+# Start View
+st.title("SAP Compass Priority Vulnerabilities")
+
+st.header(f"From January 2021 to date, :blue[{df.shape[0]} SAP Notes] related to :orange[{len(df['cve_id'].unique())} CVE-IDs] are reported.")
+
+st.divider()
 
 if on:
     with st.container():
@@ -145,13 +151,10 @@ if on:
     
     st.divider() 
 
-st.title("SAP Compass Priority Vulnerabilities")
-# Filter DataFrame based on selection
-#filtered_df = df[df['priority_l'].isin(priority_filter)]
 
 vulns = filtered_df.shape[0]
 
-st.subheader(f"Filtered Vulnerabilities | 🪲 :violet[{vulns}]")
+st.subheader(f"Selected Vulnerabilities | 🪲 :violet[{vulns}]")
 #st.write(filtered_df[['Note#', 'cve_id', 'description']])
 st.dataframe(filtered_df[['Note#', 'cveInfo', 'cveSAP', 'Priority', 'priority', 'priority_l',
                           'epss', 'cvss', 'product_l']],
@@ -221,7 +224,6 @@ fig_parallel = px.parallel_categories(
             color=dfp['sap_note_year'],
             #range_color=year_c[1])  '#4e79a7' #5f45bf '#3b2e8c'
             color_continuous_scale=['#5f45bf','#04adbf','#ba38f2','#ff1493'])
-
 st.plotly_chart(fig_parallel, theme=None, use_container_width=True)
 
 

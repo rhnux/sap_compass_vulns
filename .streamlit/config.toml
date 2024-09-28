@@ -290,9 +290,6 @@ primaryColor="#ff1493"
 # "serif", or "monospace".
 # font =
 
-
-runOnSave = true
-
 [secrets]
 
 files = [ ".streamlit/secrets.toml"]

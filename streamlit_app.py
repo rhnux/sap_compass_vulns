@@ -4,6 +4,7 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit_antd_components as sac
+from datetime import date, timedelta
 import httpx
 import re
 
@@ -100,7 +101,6 @@ with st.expander("Vulnerability Summary", expanded=exp, icon=":material/brand_aw
     count_by_month['cumulative_v'] = count_by_month.groupby('Priority')['v'].cumsum()
     total_by_priority = count_by_month.groupby('Priority')['v'].sum().reset_index()
 
-    #mt_hnews = df.loc[(df['Priority'] == 'Hot News')]['Priority'].count()
     mt_hnews = total_by_priority.loc[1]['v']
     mt_high = total_by_priority.loc[0]['v']
     mt_mid = total_by_priority.loc[3]['v']
@@ -110,10 +110,10 @@ with st.expander("Vulnerability Summary", expanded=exp, icon=":material/brand_aw
     with st.container():
         mt1, mt2, mt3, mt4 = st.columns(4, gap='large', vertical_alignment='bottom')
 
-        mt1.metric("Hot News", mt_hnews)
-        mt2.metric("High", mt_high)
-        mt3.metric("Medium", mt_mid)
-        mt4.metric("Low", mt_low)
+        mt1.metric(":violet[Hot News]", value=mt_hnews)
+        mt2.metric(":red[High]", mt_high)
+        mt3.metric(":orange[Medium]", mt_mid)
+        mt4.metric(":blue[Low]", mt_low)
 
 #row1 = st.columns(4, gap='large', vertical_alignment='bottom')
 #for col in row1:
@@ -126,22 +126,23 @@ with st.expander("Vulnerability Summary", expanded=exp, icon=":material/brand_aw
 st.divider()
 
 #vulns = filtered_df.shape[0]
+#st.markdown('#### :blue[Selected] SAP Notes Vulnerabilities')
 
-st.header(':blue[Selected] SAP Notes Vulnerabilities')
-
-col1s, col2s, col3s= st.columns([2, 2, 1], vertical_alignment='center')
+col1s, col2s = st.columns([1, 1], vertical_alignment='center')
 
 with col1s:
     priority_filter = st.multiselect("Select SAP Priority Level", df['Priority'].unique(), default=df['Priority'].unique())
 with col2s:
     year_filter = st.multiselect("Select SAP Note Year", df['sap_note_year'].unique(), default=df['sap_note_year'].unique())
-with col3s:
-    on = st.toggle(":blue[:material/neurology:]", key="on_rethink", help="Rethink Priorities")
 
 filtered_df = df[df['Priority'].isin(priority_filter) & df['sap_note_year'].isin(year_filter)]
 vulns = filtered_df.shape[0]
 
-st.subheader(f":violet[{vulns}] Selected Vulnerabilities")
+col1b, col2b = st.columns([3,1], gap="small", vertical_alignment='center')
+with col1b:
+    st.header(f":violet[{vulns}] Selected Vulnerabilities | :grey[:material/neurology:]")
+with col2b:
+    on = st.toggle("", key="on_rethink", help="Run process Rethink Priorities")
 #st.write(filtered_df[['Note#', 'cve_id', 'description']])
 st.dataframe(filtered_df[['Note#', 'cveInfo', 'cveSAP', 'Priority', 'priority_l', 'priority',
                           'epss', 'cvss', 'product_l']],
@@ -226,7 +227,7 @@ if on:
         tab1, tab2 = st.tabs(["Vunls Top Priority", "CVE-IDs"])
         with tab1:
             st.header(f":violet[Top {top}] Priority Vulnerabilities of :blue[{filtered_df.shape[0]}] selected SAP Notes")
-            st.header(f':orange[{top_vs.shape[0]} Unique CVE-IDs] || :red[{kev.shape[0]} on KEV]')
+            st.header(f':orange[{top_vs.shape[0]} Unique CVE-IDs] & :red[{kev.shape[0]} on KEV]')
             sap_cve_top252 = sap_cve_top25[['Note#','cve_id','priority_l',
                                             'priority','cvss','kev','epss_l_30','cweId']]
             st.dataframe(sap_cve_top252,

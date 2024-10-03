@@ -67,11 +67,12 @@ st.logo(
 
 sac.divider(label='SAP Compass Vulns', icon=sac.BsIcon(name='compass', size=25), color='#04adbf')
 
-st.sidebar.header("Filters")
+#st.sidebar.header("Filters")
 #priority_filter = st.sidebar.multiselect("Select Priority Level", df['priority_l'].unique(), default=df['priority_l'].unique())
-priority_filter = st.sidebar.multiselect("Select SAP Priority Level", df['Priority'].unique(), default=df['Priority'].unique())
-filtered_df = df[df['Priority'].isin(priority_filter)]
-on = st.sidebar.toggle("Top Priority")
+#priority_filter = st.sidebar.multiselect("Select SAP Priority Level", df['Priority'].unique(), default=df['Priority'].unique())
+#year_filter = st.sidebar.multiselect("Select SAP Note Year", df['sap_note_year'].unique(), default=df['sap_note_year'].unique())
+#filtered_df = df[df['Priority'].isin(priority_filter) & df['sap_note_year'].isin(year_filter)]
+#on = st.sidebar.toggle("Top Priority")
 st.sidebar.markdown('<div style="text-align: center;">Last updated 19-09-2024</div>', unsafe_allow_html=True)
 sentiment_mapping = [":red[:material/thumb_down:]", ":green[:material/thumb_up:]"]
 st.sidebar.markdown('<div style="text-align: justify;"></br></br>How do you like this app?</div>', unsafe_allow_html=True)
@@ -81,90 +82,68 @@ if selected is not None:
    vote = sentiment_mapping[selected]
    st.sidebar.markdown(f'''{texto} {vote}''')
 
+exp = bool(True)   
+
 # Start View
 # colors: #161c2c #515373 #5eadf2 #5f45bf #3b2e8c 
 # #ba38f2 #165f8c #f22ed2 #515373 #39bb9e #04adbf
 
 st.title("SAP Compass Priority Vulnerabilities")
 
-st.header(f"From January 2021 to date, :blue[{df.shape[0]} SAP Notes] related to :orange[{len(df['cve_id'].unique())} CVE-IDs] are reported.")
+with st.expander("Vulnerability Summary", expanded=exp, icon=":material/brand_awareness:"):
+
+    st.header(f"From January 2021 to date, :blue[{df.shape[0]} SAP Notes] related to :orange[{len(df['cve_id'].unique())} CVE-IDs] are reported.")
+
+    df['mp'] = df['datePublished'].values.astype('datetime64[M]')
+    count_by_month = df.groupby(by=[df['mp'].dt.date, df['Priority']]).size().reset_index(name='v')
+    count_by_month = count_by_month.sort_values('mp')
+    count_by_month['cumulative_v'] = count_by_month.groupby('Priority')['v'].cumsum()
+    total_by_priority = count_by_month.groupby('Priority')['v'].sum().reset_index()
+
+    #mt_hnews = df.loc[(df['Priority'] == 'Hot News')]['Priority'].count()
+    mt_hnews = total_by_priority.loc[1]['v']
+    mt_high = total_by_priority.loc[0]['v']
+    mt_mid = total_by_priority.loc[3]['v']
+    mt_low = total_by_priority.loc[2]['v']
+
+
+    with st.container():
+        mt1, mt2, mt3, mt4 = st.columns(4, gap='large', vertical_alignment='bottom')
+
+        mt1.metric("Hot News", mt_hnews)
+        mt2.metric("High", mt_high)
+        mt3.metric("Medium", mt_mid)
+        mt4.metric("Low", mt_low)
+
+#row1 = st.columns(4, gap='large', vertical_alignment='bottom')
+#for col in row1:
+#    mtr = col.container()
+#    mtr.metric("Hot News", mt_hnews)
+#    mtr.metric("High", mt_high)
+#    mtr.metric("Medium", mt_mid)
+#    mtr.metric("Low", mt_low)
 
 st.divider()
 
-if on:
-    with st.container():
-        epss_h = sap_cve_top_priority(filtered_df)
-        sap_cve_top25 = epss_h[0].copy()
-        sap_cve_top25 = sap_cve_top25.assign(epss_l_30 = epss_h[1])
-        top = sap_cve_top25.shape[0]
-        top_vs = sap_cve_top25.drop_duplicates(subset=['cve_id'])
-        kev = top_vs.loc[(top_vs['kev'] == True)]
-        tab1, tab2 = st.tabs(["Vunls Top Priority", "Top CVE-IDs"])
-        with tab1:
-            st.header(f":violet[Top {top}] Priority Vulnerabilities of :blue[{filtered_df.shape[0]}] selected SAP Notes")
-            st.header(f':orange[{top_vs.shape[0]} Unique CVE-IDs] | :red[{kev.shape[0]} on KEV]')
-            sap_cve_top252 = sap_cve_top25[['Note#','cve_id','priority_l',
-                                            'priority','cvss','kev','epss_l_30','cweId']]
-            st.dataframe(sap_cve_top252,
-                        column_config = {
-                            "Note#": "Note#",
-                            "cve_id": "cve_id",
-                            "priority_l": "priority_l",
-                            "priority": "priority",
-                            "cvss": "cvssScore",
-                            "kev":"kev",
-                            "epss_l_30": st.column_config.AreaChartColumn("EPSS (Last 30 days)", y_min=0, y_max=100),
-                            "cweId": "CWE"
-                            },
-                        hide_index=True,
-                        )
-            #st.write(sap_cve_top25)
-            #st.json(epss_h[1])
-            col1t25, col2t25 = st.columns(2, vertical_alignment="bottom")
-            with col1t25:
-                # Show CVSS Distribution
-                st.subheader("EPSS Score Distribution")
-                chart_data = sap_cve_top25[["cvss","epss","cve_id","Note#"]]
-                st.scatter_chart(chart_data,
-                                y="epss",
-                                x="cvss",
-                                x_label="CVSS Score",
-                                y_label="EPSS %",
-                                color="#ff1493",
-                                use_container_width=True)
+#vulns = filtered_df.shape[0]
 
-            with col2t25:
-                # Potentially Display another chart (like by date)
-                st.subheader("Vulns Date Updated")
-                #sap_cve_top25['datePublished'] = pd.to_datetime(sap_cve_top25['datePublished'], format='%Y', utc=True)
-                #sap_cve_top25['yM'] = sap_cve_top25['dateUpdated'].values.astype('datetime64[D]')
-                count_by_date = sap_cve_top25.groupby(sap_cve_top25['dateUpdated'].dt.date).size().reset_index(name='count')
-                count_by_date['count'].astype('int')
-                st.bar_chart(count_by_date, y="count", x="dateUpdated", x_label="CVE date Updated",
-                            color="#ba38f2", use_container_width=True)
-        with tab2:
-            st.subheader('Top CVEs')
-            #top_vs = sap_cve_top25.drop_duplicates(subset=['cve_id'])
-            st.subheader(f'CVE-IDs Unique {top_vs.shape[0]}')
-            #kev = top_vs.loc[(top_vs['kev'] == True)]
-            st.subheader(f':red[KEV {kev.shape[0]}]')
-            with st.expander('Top CVE'):
-                st.dataframe(top_vs[['cve_id','Priority','priority','priority_l','epss','epss_l_30','cvss','kev','cweId']],
-                             column_config={
-                                 "epss_l_30": st.column_config.AreaChartColumn("EPSS (Last 30 days)", y_min=0, y_max=100),
-                             },
-                             hide_index=True
-                             )
+st.header(':blue[Selected] SAP Notes Vulnerabilities')
 
-    
-    st.divider() 
+col1s, col2s, col3s= st.columns([2, 2, 1], vertical_alignment='center')
 
+with col1s:
+    priority_filter = st.multiselect("Select SAP Priority Level", df['Priority'].unique(), default=df['Priority'].unique())
+with col2s:
+    year_filter = st.multiselect("Select SAP Note Year", df['sap_note_year'].unique(), default=df['sap_note_year'].unique())
+with col3s:
+    on = st.toggle(":blue[:material/neurology:]", key="on_rethink", help="Rethink Priorities")
 
+filtered_df = df[df['Priority'].isin(priority_filter) & df['sap_note_year'].isin(year_filter)]
 vulns = filtered_df.shape[0]
 
-st.subheader(f"Selected Vulnerabilities | 🪲 :violet[{vulns}]")
+st.subheader(f":violet[{vulns}] Selected Vulnerabilities")
 #st.write(filtered_df[['Note#', 'cve_id', 'description']])
-st.dataframe(filtered_df[['Note#', 'cveInfo', 'cveSAP', 'Priority', 'priority', 'priority_l',
+st.dataframe(filtered_df[['Note#', 'cveInfo', 'cveSAP', 'Priority', 'priority_l', 'priority',
                           'epss', 'cvss', 'product_l']],
              column_config={
                  "epss": st.column_config.NumberColumn(
@@ -210,8 +189,8 @@ with col1:
 with col2:
     # Potentially Display another chart (like by date)
     st.subheader("Vulns Year Published")
-    df['yp'] = df['datePublished'].values.astype('datetime64[Y]')
-    count_by_date = df.groupby(df['yp'].dt.date).size().reset_index(name='count')
+    filtered_df['yp'] = filtered_df['datePublished'].values.astype('datetime64[Y]')
+    count_by_date = filtered_df.groupby(filtered_df['yp'].dt.date).size().reset_index(name='count')
     print(count_by_date)
     st.bar_chart(count_by_date, y="count", x="yp", x_label="CVE Year Published",
                  color="#ba38f2", use_container_width=True)
@@ -230,13 +209,81 @@ fig_parallel = px.parallel_categories(
             'Priority':'SAP',
             'cvss_severity':'cvssSeverity'},
             color=dfp['sap_note_year'],
-            #range_color=year_c[1])  '#4e79a7' #5f45bf '#3b2e8c'
-            color_continuous_scale=['#5f45bf','#3b2e8c','#ba38f2','#ff1493'],
+            #range_color=year_c[1])  '#4e79a7' #5f45bf '#3b2e8c' #5eadf2
+            color_continuous_scale=['#5eadf2','#3b2e8c','#ba38f2','#ff1493'],
             color_continuous_midpoint=2022)
 st.plotly_chart(fig_parallel, theme=None, use_container_width=True)
 
+if on:
+    with st.container():
+        exp = bool(False)
+        epss_h = sap_cve_top_priority(filtered_df)
+        sap_cve_top25 = epss_h[0].copy()
+        sap_cve_top25 = sap_cve_top25.assign(epss_l_30 = epss_h[1])
+        top = sap_cve_top25.shape[0]
+        top_vs = sap_cve_top25.drop_duplicates(subset=['cve_id'])
+        kev = top_vs.loc[(top_vs['kev'] == True)]
+        tab1, tab2 = st.tabs(["Vunls Top Priority", "CVE-IDs"])
+        with tab1:
+            st.header(f":violet[Top {top}] Priority Vulnerabilities of :blue[{filtered_df.shape[0]}] selected SAP Notes")
+            st.header(f':orange[{top_vs.shape[0]} Unique CVE-IDs] || :red[{kev.shape[0]} on KEV]')
+            sap_cve_top252 = sap_cve_top25[['Note#','cve_id','priority_l',
+                                            'priority','cvss','kev','epss_l_30','cweId']]
+            st.dataframe(sap_cve_top252,
+                        column_config = {
+                            "Note#": "Note#",
+                            "cve_id": "cve_id",
+                            "priority_l": "priority_l",
+                            "priority": "priority",
+                            "cvss": "cvssScore",
+                            "kev":"kev",
+                            "epss_l_30": st.column_config.AreaChartColumn("EPSS (Last 30 days)", y_min=0, y_max=100),
+                            "cweId": "CWE"
+                            },
+                        hide_index=True,
+                        )
+            #st.write(sap_cve_top25)
+            #st.json(epss_h[1])
+            col1t25, col2t25 = st.columns(2, vertical_alignment="bottom")
+            with col1t25:
+                # Show CVSS Distribution
+                st.subheader("EPSS Score Distribution")
+                chart_data = sap_cve_top25[["cvss","epss","cve_id","Note#"]]
+                st.scatter_chart(chart_data,
+                                y="epss",
+                                x="cvss",
+                                x_label="CVSS Score",
+                                y_label="EPSS %",
+                                color="#ff1493",
+                                use_container_width=True)
 
-with st.expander("Dataset Filtered Vulnerabilities"):
-    st.subheader("Filtered Vulnerabilities")
-    st.write(filtered_df)
+            with col2t25:
+                # Potentially Display another chart (like by date)
+                st.subheader("Vulns Date Updated")
+                #sap_cve_top25['datePublished'] = pd.to_datetime(sap_cve_top25['datePublished'], format='%Y', utc=True)
+                #sap_cve_top25['yM'] = sap_cve_top25['dateUpdated'].values.astype('datetime64[D]')
+                count_by_date = sap_cve_top25.groupby(sap_cve_top25['dateUpdated'].dt.date).size().reset_index(name='count')
+                count_by_date['count'].astype('int')
+                st.bar_chart(count_by_date, y="count", x="dateUpdated", x_label="CVE date Updated",
+                            color="#ba38f2", use_container_width=True)
+        with tab2:
+            st.subheader('CVE Score')
+            #top_vs = sap_cve_top25.drop_duplicates(subset=['cve_id'])
+            st.subheader(f':orange[{top_vs.shape[0]} CVE-IDs] | :red[{kev.shape[0]} on KEV]')
+            #kev = top_vs.loc[(top_vs['kev'] == True)]
+            #st.subheader(f':red[KEV {kev.shape[0]}]')
+            with st.expander('CVE by Priority'):
+                st.dataframe(top_vs[['cve_id','Priority','priority','priority_l','epss','epss_l_30','cvss','kev','cweId']],
+                             column_config={
+                                 "epss_l_30": st.column_config.AreaChartColumn("EPSS (Last 30 days)", y_min=0, y_max=100),
+                             },
+                             hide_index=True
+                             )
+
+    
+    st.divider() 
+
+with st.expander("Dataset SAP Vulnerabilities"):
+    st.subheader("Dataset Raw")
+    st.write(df)
 

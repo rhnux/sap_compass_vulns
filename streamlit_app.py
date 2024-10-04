@@ -12,8 +12,10 @@ import re
 
 df = pd.read_csv('data/sap_cve_last_02.csv')
 cwe_top_25 = pd.read_csv('data/cwe_top_25.csv')
+ll_cwe_t25 = list(cwe_top_25['ID'])
 df['datePublished'] = pd.to_datetime(df['datePublished'], format='mixed', utc=True)
 df['dateUpdated'] = pd.to_datetime(df['dateUpdated'], format='mixed', utc=True)
+df['cwe_t25'] = df['cweId'].apply(lambda x: x in ll_cwe_t25)
 
 df.drop_duplicates(subset=['Note#'], inplace=True)
 
@@ -162,10 +164,9 @@ if on:
             st.header(f':orange[{top_vs.shape[0]}] Unique CVE-IDs & :red[{kev.shape[0]} on KEV]')
             
             sap_cve_top252 = sap_cve_top25[['Note#','cve_id','Priority','priority_l',
-                                            'priority','cvss','kev','epss_l_30','cweId']]
-            style_sap_cve_top25 = sap_cve_top252.style.map(highlight_priority, subset=['Priority'])
+                                            'priority','cvss','kev','epss_l_30','cweId','cwe_t25']]
 
-            st.dataframe(style_sap_cve_top25,
+            st.dataframe(sap_cve_top252,
                         column_config = {
                             "Note#": "Note#",
                             "cve_id": "cve_id",
@@ -175,7 +176,8 @@ if on:
                             "cvss": "cvssScore",
                             "kev":"kev",
                             "epss_l_30": st.column_config.AreaChartColumn("EPSS (Last 30 days)", y_min=0, y_max=100),
-                            "cweId": "CWE"
+                            "cweId": "CWE",
+                            "cwe_t25": "CWE_T25"
                             },
                         hide_index=True,
                         )
@@ -211,7 +213,7 @@ if on:
             #st.subheader(f':red[KEV {kev.shape[0]}]')
             with st.expander('CVE by Priority'):
                 st.dataframe(top_vs[['cve_id','descriptions','Priority','priority','priority_l',
-                                     'epss','epss_l_30','cvss','kev','cweId']],
+                                     'epss','epss_l_30','cvss','kev','cweId','cwe_t25']],
                              column_config={
                                  "epss_l_30": st.column_config.AreaChartColumn("EPSS (Last 30 days)", y_min=0, y_max=100),
                              },

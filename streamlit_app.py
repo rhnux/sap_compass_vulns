@@ -210,14 +210,14 @@ with st.expander("Vulnerability Summary 2024", expanded=False, icon=":material/b
         mt3.metric(":orange[Medium]", mt_mid)
         mt4.metric(":blue[Low]", mt_low)
 
-    st.divider()
+#    st.divider()
 
-    with st.container(key='news'):
-        st.markdown('''
-                    ###### [CVE-2019-0344](https://app.opencve.io/cve/CVE-2019-0344) - :red[9.8 Critical Vulnerabily] have been updated on **2024-10-04** between 14:00 and 14:59.
-                    - Due to unsafe deserialization used in SAP Commerce Cloud (virtualjdbc extension), versions 6.4, 6.5, 6.6, 6.7, 1808, 1811, 1905, it is possible to execute arbitrary code on a target machine with 'Hybris' user rights,...
-                    - Changes: metrics
-                    ''') 
+#    with st.container(key='updates'):
+#        st.markdown('''
+#                    ###### [CVE-2019-0344](https://app.opencve.io/cve/CVE-2019-0344) - :red[9.8 Critical Vulnerabily] have been updated on **2024-10-04** between 14:00 and 14:59.
+#                    - Due to unsafe deserialization used in SAP Commerce Cloud (virtualjdbc extension), versions 6.4, 6.5, 6.6, 6.7, 1808, 1811, 1905, it is possible to execute arbitrary code on a target machine with 'Hybris' user rights,...
+#                    - Changes: metrics
+#                    ''') 
 
 #row1 = st.columns(4, gap='large', vertical_alignment='bottom')
 #for col in row1:

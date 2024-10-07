@@ -179,7 +179,8 @@ if selected is not None:
    texto = '### You selected:'
    vote = sentiment_mapping[selected]
    st.sidebar.markdown(f'''{texto} {vote}''')
-
+st.sidebar.caption("Info and Details")
+st.sidebar.caption(":blue[:material/neurology:] [SAP Vulnerabilities - CVE-IDs](https://dso-days-siteblog.vercel.app/blog/sap-cve-ids/)")
 # Start View
 # colors: #161c2c #515373 #5eadf2 #5f45bf #3b2e8c 
 # #ba38f2 #165f8c #f22ed2 #515373 #39bb9e #04adbf

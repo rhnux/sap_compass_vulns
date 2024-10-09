@@ -17,6 +17,7 @@ df['datePublished'] = pd.to_datetime(df['datePublished'], format='mixed', utc=Tr
 df['dateUpdated'] = pd.to_datetime(df['dateUpdated'], format='mixed', utc=True)
 df['cwe_t25'] = df['cweId'].apply(lambda x: x in ll_cwe_t25)
 
+
 df.drop_duplicates(subset=['Note#'], inplace=True)
 
 df['sap_note_year'] = df['sap_note_year'].astype('category')
@@ -26,6 +27,7 @@ df['priority'] = df['priority'].astype('category')
 df['priority_l'] = df['priority_l'].astype('category')
 df['Priority'] = df['Priority'].astype('category')
 df['cvss_severity'] = df['cvss_severity'].astype('category')
+df['kev'].fillna(False, inplace=True)
 df['cveInfo'] = df['cve_id'].apply(lambda x: x.replace(f'{x}', f'https://www.cvedetails.com/cve/{x}'))
 df['cveSAP'] = df['cve_id'].apply(lambda x: x.replace(f'{x}', f'https://www.cve.org/CVERecord?id={x}'))
 df['epss'] = df['epss'].map(lambda x: x * 100).astype('float').round(2)

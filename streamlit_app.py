@@ -291,36 +291,23 @@ if on:
                         )
             #st.write(sap_cve_top25)
             #st.json(epss_h[1])
-            col1t25, col2t25 = st.columns(2, vertical_alignment="top")
-            with col1t25:
-                # Show CVSS Distribution
-                chart_data = sap_cve_top25[["cvss","epss","cve_id","Note#"]]
-                # Define thresholds
-                threshold_y = 25  # Example threshold on y-axis
-                threshold_x = 6.0  # Example threshold on x-axis
-                # Create scatter plot
-                fig = px.scatter(chart_data, x='cvss', y='epss', color_discrete_sequence=["#ff1493"],
-                                 labels={"cvss": "CVSS score", "epss": "EPSS %"})
-                fig.add_hline(y=threshold_y, line_color='grey', line_dash='dash', 
-                              annotation_text=f"Threshold EPSS: {threshold_y}%", annotation_position="bottom right")
-                fig.add_vline(x=threshold_x, line_color='grey', line_dash='dash', 
-                              annotation_text=f"Threshold CVSS: {threshold_x}", annotation_position="top right")
-                # Update layout
-                fig.update_layout(xaxis_title="CVSS Score", yaxis_title="EPSS %")
-                st.subheader("EPSS Score Distribution")
-                st.plotly_chart(fig, use_container_width=True)                
+            # Show CVSS Distribution
+            chart_data = sap_cve_top25[["cvss","epss","cve_id","Note#"]]
+            # Define thresholds
+            threshold_y = 25  # Example threshold on y-axis
+            threshold_x = 6.0  # Example threshold on x-axis
+            # Create scatter plot
+            fig = px.scatter(chart_data, x='cvss', y='epss', color_discrete_sequence=["#ff1493"],
+                                labels={"cvss": "CVSS score", "epss": "EPSS %"})
+            fig.add_hline(y=threshold_y, line_color='grey', line_dash='dash', 
+                            annotation_text=f"Threshold EPSS: {threshold_y}%", annotation_position="bottom right")
+            fig.add_vline(x=threshold_x, line_color='grey', line_dash='dash', 
+                            annotation_text=f"Threshold CVSS: {threshold_x}", annotation_position="top right")
+            # Update layout
+            fig.update_layout(xaxis_title="CVSS Score", yaxis_title="EPSS %")
+            st.subheader("EPSS Score Distribution")
+            st.plotly_chart(fig, use_container_width=True)
 
-
-            with col2t25:
-                # Potentially Display another chart (like by date)
-                st.subheader("Vulns Date Updated")
-
-                #sap_cve_top25['datePublished'] = pd.to_datetime(sap_cve_top25['datePublished'], format='%Y', utc=True)
-                #sap_cve_top25['yM'] = sap_cve_top25['dateUpdated'].values.astype('datetime64[D]')
-                count_by_date = sap_cve_top25.groupby(sap_cve_top25['dateUpdated'].dt.date).size().reset_index(name='count')
-                count_by_date['count'].astype('int')
-                st.bar_chart(count_by_date, y="count", x="dateUpdated", x_label="CVE date Updated",
-                            color="#ba38f2", use_container_width=True)
         with tab2:
             st.subheader('CVE Details by Rethink Priority Score')
             st.header(f':orange[{top_vs.shape[0]} CVE-IDs] | :red[{kev.shape[0]} on KEV] | :blue[{cweT25.shape[0]} on CWE Top 25]')
@@ -342,7 +329,11 @@ if on:
                              },
                              hide_index=True
                              )
-                
+            st.subheader('Treemap Score Priorities')
+            fig_tm = px.treemap(top_vs, path=[px.Constant("CVE Details"), 'Priority', 'sap_note_year', 'priority', 'priority_l'], values='composite_score')
+            fig_tm.update_traces(marker_colorscale=['#5eadf2','#3b2e8c','#04adbf','#ba38f2','#ff1493'])                                        
+            fig_tm.update_layout(margin = dict(t=50, l=25, r=25, b=25))
+            st.plotly_chart(fig_tm, theme=None, use_container_width=True)    
     st.divider()
 
 st.header(f":violet[{vulns}] Selected Vulnerabilities")

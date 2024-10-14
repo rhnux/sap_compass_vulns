@@ -10,7 +10,7 @@ import re
 
 # SAP Notes data loading
 
-df = pd.read_csv('data/sap_cve_last_02.csv')
+df = pd.read_csv('data/sap_cve_last_01.csv')
 cwe_top_25 = pd.read_csv('data/cwe_top_25.csv')
 ll_cwe_t25 = list(cwe_top_25['ID'])
 df['datePublished'] = pd.to_datetime(df['datePublished'], format='mixed', utc=True)
@@ -173,7 +173,7 @@ st.logo(
 
 sac.divider(label='SAP Compass Vulns', icon=sac.BsIcon(name='compass', size=25), color='#04adbf')
 
-st.sidebar.markdown('<div style="text-align: center;">Last updated 08-10-2024</div>', unsafe_allow_html=True)
+st.sidebar.markdown('<div style="text-align: center;">Last updated 14-10-2024</div>', unsafe_allow_html=True)
 sentiment_mapping = [":red[:material/thumb_down:]", ":green[:material/thumb_up:]"]
 st.sidebar.markdown('<div style="text-align: justify;"></br></br>How do you like this app?</div>', unsafe_allow_html=True)
 selected = st.sidebar.feedback("thumbs")

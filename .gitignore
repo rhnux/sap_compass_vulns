@@ -163,6 +163,8 @@ cython_debug/
 
 # Streamlit
 .streamlit/secrets.toml
+good2.py
+good_prac_version.py
 
 # Vercel
 =======

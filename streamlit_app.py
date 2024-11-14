@@ -109,7 +109,7 @@ st.logo("assets/logo.png", link="https://dub.sh/dso-days", icon_image="assets/lo
 sac.divider(label='SAP Compass Vulns', icon=sac.BsIcon(name='compass', size=25), color='#04adbf')
 
 # Sidebar
-st.sidebar.markdown('<div style="text-align: center;">Last updated 14-10-2024</div>', unsafe_allow_html=True)
+st.sidebar.markdown('<div style="text-align: center;">Last updated 14-11-2024</div>', unsafe_allow_html=True)
 sentiment_mapping = [":red[:material/thumb_down:]", ":green[:material/thumb_up:]"]
 st.sidebar.markdown('<div style="text-align: justify;"></br></br>How do you like this app?</div>', unsafe_allow_html=True)
 selected = st.sidebar.feedback("thumbs")

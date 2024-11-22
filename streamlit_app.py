@@ -12,7 +12,7 @@ import re
 @st.cache_data
 def load_data():
     df = pd.read_csv('data/sap_cve_last_01.csv')
-    cwe_top_25 = pd.read_csv('data/cwe_top_25.csv')
+    cwe_top_25 = pd.read_csv('data/cwe_top_25_2024.csv')
     ll_cwe_t25 = list(cwe_top_25['ID'])
     
     df['datePublished'] = pd.to_datetime(df['datePublished'], format='mixed', utc=True)
@@ -109,7 +109,7 @@ st.logo("assets/logo.png", link="https://dub.sh/dso-days", icon_image="assets/lo
 sac.divider(label='SAP Compass Vulns', icon=sac.BsIcon(name='compass', size=25), color='#04adbf')
 
 # Sidebar
-st.sidebar.markdown('<div style="text-align: center;">Last updated 14-11-2024</div>', unsafe_allow_html=True)
+st.sidebar.markdown('<div style="text-align: center;">Last updated 22-11-2024</div>', unsafe_allow_html=True)
 sentiment_mapping = [":red[:material/thumb_down:]", ":green[:material/thumb_up:]"]
 st.sidebar.markdown('<div style="text-align: justify;"></br></br>How do you like this app?</div>', unsafe_allow_html=True)
 selected = st.sidebar.feedback("thumbs")
@@ -120,6 +120,8 @@ st.sidebar.caption(":blue[:material/neurology:] [SAP Vulnerabilities - CVE-IDs](
 
 # Main content
 st.title("SAP Compass Priority Vulnerabilities")
+
+st.info('New 2024 CWE Top 25 for Rethink process', icon=":material/emergency_heat:")
 
 with st.expander("Vulnerability Summary 2024", expanded=False, icon=":material/brand_awareness:"):
     st.header(f"From January 2021 to date, :blue[{df.shape[0]} SAP Notes] related to :orange[{len(df['cve_id'].unique())} CVE-IDs] are reported.")

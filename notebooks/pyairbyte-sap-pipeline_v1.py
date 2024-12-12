@@ -137,7 +137,8 @@ def create_sap_notes_pipeline():
         ('https://support.sap.com/en/my-support/knowledge-base/security-notes-news/august-2024.html', False),
         ('https://support.sap.com/en/my-support/knowledge-base/security-notes-news/september-2024.html', False),
         ('https://support.sap.com/en/my-support/knowledge-base/security-notes-news/october-2024.html', False),
-        ('https://support.sap.com/en/my-support/knowledge-base/security-notes-news/november-2024.html', False)
+        ('https://support.sap.com/en/my-support/knowledge-base/security-notes-news/november-2024.html', False),
+        ('https://support.sap.com/en/my-support/knowledge-base/security-notes-news/december-2024.html', False)
     ]
     
     web_dataframes = []

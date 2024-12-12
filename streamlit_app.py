@@ -11,7 +11,7 @@ import re
 # Caching data loading
 @st.cache_data
 def load_data():
-    df = pd.read_csv('data/sap_cve_last_01.csv')
+    df = pd.read_csv('data/sap_cve_last_202412_all.csv')
     cwe_top_25 = pd.read_csv('data/cwe_top_25_2024.csv')
     ll_cwe_t25 = list(cwe_top_25['ID'])
     
@@ -109,7 +109,7 @@ st.logo("assets/logo.png", link="https://dub.sh/dso-days", icon_image="assets/lo
 sac.divider(label='SAP Compass Vulns', icon=sac.BsIcon(name='compass', size=25), color='#04adbf')
 
 # Sidebar
-st.sidebar.markdown('<div style="text-align: center;">Last updated 22-11-2024</div>', unsafe_allow_html=True)
+st.sidebar.markdown('<div style="text-align: center;">Last updated 10-12-2024</div>', unsafe_allow_html=True)
 sentiment_mapping = [":red[:material/thumb_down:]", ":green[:material/thumb_up:]"]
 st.sidebar.markdown('<div style="text-align: justify;"></br></br>How do you like this app?</div>', unsafe_allow_html=True)
 selected = st.sidebar.feedback("thumbs")

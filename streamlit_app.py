@@ -45,7 +45,10 @@ def fetch_epss_data(cve):
 # Select A+|1+ CVEs & Get EPSS data of TOP Priorities CVEs
 @st.cache_data
 def sap_cve_top_priority(xdf):
-    sap_cve_top = xdf[(xdf['priority_l'].isin(['A+', 'B'])) | (xdf['priority'] == 'Priority 1+')]
+    #sap_cve_top = xdf[(xdf['priority_l'].isin(['A+', 'B'])) | (xdf['priority'] == 'Priority 1+')]
+    sap_cve_top = xdf[(xdf['priority_l'].isin(['A+'])) |
+                       (xdf['priority'] == 'Priority 1+') |
+                       (xdf['cvss'] > 7.5)]
     col_epss_hist = [fetch_epss_data(row['cve_id']) for _, row in sap_cve_top.iterrows()]
     return sap_cve_top, col_epss_hist
 
@@ -195,7 +198,7 @@ if on:
                 top_vs[['cveInfo','Priority','priority_l','priority','cweId','epss','cvss',
                         'cvss_severity','kev','sap_note_year','cwe_t25','epss_l_30','epss_trend',
                         'epss_avg','kev_score','cvss_score','epss_score','cwe_score','priority_score',
-                        'composite_score','vendor','product','descriptions']],
+                        'composite_score','vendor','product_l','descriptions']],
                 column_config={
                     "cveInfo": st.column_config.LinkColumn("cveInfo", help="CVE Details", max_chars=50, display_text=r"(CVE-....-\d+)"),
                     "epss_l_30": st.column_config.AreaChartColumn("EPSS (Last 30 days)", y_min=0, y_max=100),

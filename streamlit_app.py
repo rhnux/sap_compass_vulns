@@ -121,7 +121,8 @@ st.sidebar.caption(":blue[:material/neurology:] [SAP Vulnerabilities - CVE-IDs](
 # Main content
 st.title("SAP Compass Priority Vulnerabilities")
 
-st.info('New 2024 CWE Top 25 for Rethink process', icon=":material/emergency_heat:")
+st.toast('New 2024 CWE Top 25 for Rethink process', icon=":material/emergency_heat:")
+
 
 with st.expander("Vulnerability Summary 2024", expanded=False, icon=":material/brand_awareness:"):
     st.header(f"From January 2021 to date, :blue[{df.shape[0]} SAP Notes] related to :orange[{len(df['cve_id'].unique())} CVE-IDs] are reported.")

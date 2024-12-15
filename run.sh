@@ -22,7 +22,7 @@ trap stopRunningProcess EXIT TERM
 source venv/bin/activate
 
 #streamlit run ${HOME}/appuser/streamlit_app.py &
-streamlit run streamlit_app.py &
+streamlit run app_sap_logo.py &
 APP_ID=${!}
 
 wait ${APP_ID}

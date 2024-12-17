@@ -120,7 +120,7 @@ if selected is not None:
     st.sidebar.markdown(f'### You selected: {sentiment_mapping[selected]}')
 st.sidebar.caption("Info and Details")
 st.sidebar.caption(":blue[:material/neurology:] [SAP Vulnerabilities - CVE-IDs](https://dso-days-siteblog.vercel.app/blog/sap-cve-ids/)")
-st.sidebar.caption(":blue[:material/neurology:] [SAP Vulnerabilities Summary 2024](blog/2024-sap-compass-vulns-summary/)")
+st.sidebar.caption(":blue[:material/neurology:] [SAP Vulnerabilities Summary 2024](https://dso-days-siteblog.vercel.app/blog/2024-sap-compass-vulns-summary/)")
 
 # Main content
 #st.html("<img height='96' width='96' src='https://cdn.simpleicons.org/SAP/white' />")

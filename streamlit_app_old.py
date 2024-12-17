@@ -109,7 +109,7 @@ df = load_data()
 # UI Components
 st.logo("assets/logo.png", link="https://dub.sh/dso-days", icon_image="assets/logo.png")
 
-sac.divider(label="<img height='96' width='96' src='https://cdn.simpleicons.org/SAP/white' /> Compass Priority Vulnerabilities", color='#ffffff')
+sac.divider(label='SAP Compass Vulns', icon=sac.BsIcon(name='compass', size=25), color='#04adbf')
 
 # Sidebar
 st.sidebar.markdown('<div style="text-align: center;">Last updated 10-12-2024</div>', unsafe_allow_html=True)
@@ -122,13 +122,12 @@ st.sidebar.caption("Info and Details")
 st.sidebar.caption(":blue[:material/neurology:] [SAP Vulnerabilities - CVE-IDs](https://dso-days-siteblog.vercel.app/blog/sap-cve-ids/)")
 
 # Main content
-#st.html("<img height='96' width='96' src='https://cdn.simpleicons.org/SAP/white' />")
-#st.title("SAP Compass Priority Vulnerabilities")
+st.title("SAP Compass Priority Vulnerabilities")
 
 st.toast('New 2024 CWE Top 25 for Rethink process', icon=":material/emergency_heat:")
 
 
-with st.expander("Vulnerability Summary 2021-2024", expanded=False, icon=":material/explore:"):
+with st.expander("Vulnerability Summary 2024", expanded=False, icon=":material/brand_awareness:"):
     st.header(f"From January 2021 to date, :blue[{df.shape[0]} SAP Notes] related to :orange[{len(df['cve_id'].unique())} CVE-IDs] are reported.")
 
     count_by_month = df.groupby([df['datePublished'].dt.to_period('M'), 'Priority']).size().reset_index(name='v')

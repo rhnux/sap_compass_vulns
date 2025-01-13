@@ -120,6 +120,7 @@ if selected is not None:
     st.sidebar.markdown(f'### You selected: {sentiment_mapping[selected]}')
 st.sidebar.caption("Info and Details")
 st.sidebar.caption(":blue[:material/neurology:] [SAP Vulnerabilities - CVE-IDs](https://dso-days-siteblog.vercel.app/blog/sap-cve-ids/)")
+st.sidebar.image("https://fidoalliance.org/wp-content/uploads/2023/12/FIDO_Passkey_mark_B_black.jpg", width=50)
 
 # Main content
 st.title("SAP Compass Priority Vulnerabilities")

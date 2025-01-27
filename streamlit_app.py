@@ -126,11 +126,11 @@ st.sidebar.caption(":blue[:material/neurology:] [SAP Vulnerabilities Summary 202
 #st.html("<img height='96' width='96' src='https://cdn.simpleicons.org/SAP/white' />")
 #st.title("SAP Compass Priority Vulnerabilities")
 
-st.toast('New 2024 CWE Top 25 for Rethink process', icon=":material/emergency_heat:")
+#st.toast('New 2024 CWE Top 25 for Rethink process', icon=":material/emergency_heat:")
 
 
 with st.expander("Vulnerability Summary 2021-2025", expanded=False, icon=":material/explore:"):
-    st.header(f"From January 2021 to date, :blue[{df.shape[0]} SAP Notes] related to :orange[{len(df['cve_id'].unique())} CVE-IDs] are reported.")
+    st.header(f"From January 2021 to date, :blue[{df.shape[0]} SAP Notes] related to :orange[{len(df['cve_id'].unique())} CVE-IDs] are reported.", anchor=False)
 
     count_by_month = df.groupby([df['datePublished'].dt.to_period('M'), 'Priority']).size().reset_index(name='v')
     count_by_month['cumulative_v'] = count_by_month.groupby('Priority')['v'].cumsum()
@@ -170,8 +170,8 @@ if on:
         
         tab1, tab2 = st.tabs(["Vunls Top Priority", "CVE Info"])
         with tab1:
-            st.header(f":violet[Top {top}] Priority Vulnerabilities of :blue[{filtered_df.shape[0]}] selected SAP Notes")
-            st.header(f':orange[{top_vs.shape[0]}] Unique CVE-IDs & :red[{kev.shape[0]} on KEV]')
+            st.header(f":violet[Top {top}] Priority Vulnerabilities of :blue[{filtered_df.shape[0]}] selected SAP Notes", anchor=False)
+            st.header(f':orange[{top_vs.shape[0]}] Unique CVE-IDs & :red[{kev.shape[0]} on KEV]', anchor=False)
             
             st.dataframe(
                 sap_cve_top25[['Note#','cve_id','Priority','priority_l','priority','cvss','kev','epss','cweId','cwe_t25','composite_score']],
@@ -190,12 +190,12 @@ if on:
             fig.add_vline(x=6.0, line_color='grey', line_dash='dash', 
                           annotation_text="Threshold CVSS: 6.0", annotation_position="top right")
             fig.update_layout(xaxis_title="CVSS Score", yaxis_title="EPSS %")
-            st.subheader("EPSS Score Distribution")
+            st.subheader("EPSS Score Distribution", anchor=False)
             st.plotly_chart(fig, use_container_width=True)
 
         with tab2:
-            st.subheader('CVE Details by Rethink Priority Score')
-            st.header(f':orange[{top_vs.shape[0]} CVE-IDs] | :red[{kev.shape[0]} on KEV] | :blue[{cweT25.shape[0]} on CWE Top 25]')
+            st.subheader('CVE Details by Rethink Priority Score', anchor=False)
+            st.header(f':orange[{top_vs.shape[0]} CVE-IDs] | :red[{kev.shape[0]} on KEV] | :blue[{cweT25.shape[0]} on CWE Top 25]', anchor=False)
             st.dataframe(
                 top_vs[['cveInfo','Priority','priority_l','priority','cweId','epss','cvss',
                         'cvss_severity','kev','sap_note_year','cwe_t25','epss_l_30','epss_trend',
@@ -209,14 +209,14 @@ if on:
                 hide_index=True
             )
             
-            st.subheader('Treemap Score Priorities')
+            st.subheader('Treemap Score Priorities', anchor=False)
             fig_tm = px.treemap(top_vs, path=[px.Constant("CVE Details"), 'Priority', 'sap_note_year', 'priority', 'priority_l'], values='composite_score')
             fig_tm.update_traces(marker_colorscale=['#5eadf2','#3b2e8c','#04adbf','#ba38f2','#ff1493'])                                        
             fig_tm.update_layout(margin = dict(t=50, l=25, r=25, b=25))
             st.plotly_chart(fig_tm, theme=None, use_container_width=True)    
     st.divider()
 
-st.header(f":violet[{filtered_df.shape[0]}] Selected Vulnerabilities")
+st.header(f":violet[{filtered_df.shape[0]}] Selected Vulnerabilities", anchor=False)
 st.dataframe(
     filtered_df[['Note#', 'cveInfo', 'cveSAP', 'Priority', 'priority_l', 'priority', 'epss', 'cvss', 'product_l']],
     column_config={
@@ -231,7 +231,7 @@ col1, col2 = st.columns(2, vertical_alignment="bottom")
 
 with col1:
     # Show CVSS Distribution
-    st.subheader("EPSS Score Distribution")
+    st.subheader("EPSS Score Distribution", anchor=False)
     chart_data = filtered_df[["cvss","epss","cve_id","Note#"]]
     st.scatter_chart(chart_data,
                     y="epss",
@@ -243,7 +243,7 @@ with col1:
 
 with col2:
     # Potentially Display another chart (like by date)
-    st.subheader("Vulns Year Published")
+    st.subheader("Vulns Year Published", anchor=False)
     filtered_df['yp'] = filtered_df['datePublished'].values.astype('datetime64[Y]')
     count_by_date = filtered_df.groupby(filtered_df['yp'].dt.date).size().reset_index(name='count')
     print(count_by_date)
@@ -253,7 +253,7 @@ with col2:
 
 
 
-st.subheader("Parallel Category Diagram")
+st.subheader("Parallel Category Diagram", anchor=False)
 dfp = filtered_df[['sap_note_year','year','priority_l','priority','Priority','cvss_severity']]
 #dfp['team'] = pd.factorize(dfp['year'])[0].astype('int')
 fig_parallel = px.parallel_categories(
@@ -275,5 +275,5 @@ st.plotly_chart(fig_parallel, theme=None, use_container_width=True)
 st.divider() 
 
 with st.expander("Dataset SAP Vulnerabilities"):
-    st.subheader("Dataset Raw")
+    st.subheader("Dataset Raw", anchor = False)
     st.write(df)

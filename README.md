@@ -15,11 +15,9 @@ VULNCHECK_API = "vulncheck_"
 ```
 ---
 
-# Dashboard - SAP Compass Priority Vulnerabilities
+### Streamlit app
 
-Streamlit app.
-
-## Notebooks / Scripts
+### Notebooks / Scripts
 
 ETL SAP Security Notes | CVE_Prioritizer | SploitScan | EPSS
 

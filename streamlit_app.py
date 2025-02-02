@@ -12,6 +12,7 @@ import re
 @st.cache_data
 def load_data():
     df = pd.read_csv('data/sap_cve_2025_aws.csv')
+#    df_history = pd.read_csv('data/sap_all_old.csv')
     cwe_top_25 = pd.read_csv('data/cwe_top_25_2024.csv')
     ll_cwe_t25 = list(cwe_top_25['ID'])
     

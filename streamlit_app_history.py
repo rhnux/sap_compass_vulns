@@ -11,9 +11,11 @@ import re
 
 # Caching data loading
 @st.cache_data
-def load_data():
-#    df = pd.read_csv('data/sap_cve_2025_aws.csv')
-    df = pd.read_csv('data/sap_all_cve.csv')
+def load_data(use_history_file):
+    if use_history_file:
+        df = pd.read_csv('data/sap_all_cve.csv')
+    else:
+        df = pd.read_csv('data/sap_cve_2025_aws.csv')
     df.sort_values(by='cve_id', inplace=True)
     cwe_top_25 = pd.read_csv('data/cwe_top_25_2024.csv')
     ll_cwe_t25 = list(cwe_top_25['ID'])
@@ -107,13 +109,21 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# Load data
-df = load_data()
-
 # UI Components
 st.logo("assets/logo.png", link="https://dub.sh/dso-days", icon_image="assets/logo.png")
 
 sac.divider(label="<img height='96' width='96' src='https://cdn.simpleicons.org/SAP/white' /> Compass Priority Vulnerabilities", color='#ffffff')
+
+# Load data
+use_history_file = st.toggle(":blue[:material/manage_history:] History SAP CVE-IDs",
+                             key="load_history", help="Load history SAP CVE-IDs")
+df = load_data(use_history_file)
+
+if use_history_file:
+    ref_data_from = "2001"
+else:
+    ref_data_from = "2021" 
+
 
 # Sidebar
 st.sidebar.markdown('<div style="text-align: center;">Last updated 14-01-2025</div>', unsafe_allow_html=True)
@@ -133,8 +143,8 @@ st.sidebar.caption(":blue[:material/neurology:] [SAP Vulnerabilities Summary 202
 #st.toast('New 2024 CWE Top 25 for Rethink process', icon=":material/emergency_heat:")
 
 
-with st.expander("Vulnerability Summary 2001-2025", expanded=False, icon=":material/explore:"):
-    st.header(f"From January 2001 to date, :blue[{df.shape[0]} SAP Notes] related to :orange[{len(df['cve_id'].unique())} CVE-IDs] are reported.", anchor=False)
+with st.expander(f"Vulnerability Summary {ref_data_from}-2025", expanded=False, icon=":material/explore:"):
+    st.header(f"From January {ref_data_from} to date, :blue[{df.shape[0]} SAP Notes] related to :orange[{len(df['cve_id'].unique())} CVE-IDs] are reported.", anchor=False)
 
     count_by_month = df.groupby([df['datePublished'].dt.to_period('M'), 'Priority']).size().reset_index(name='v')
     count_by_month['cumulative_v'] = count_by_month.groupby('Priority')['v'].cumsum()
@@ -153,7 +163,7 @@ col1s, col2s, col3s = st.columns([2,2,1], vertical_alignment='center')
 with col1s:
     priority_filter = st.multiselect("Select SAP Priority Level", df['Priority'].unique(), default=df['Priority'].unique())
 with col2s:
-    year_filter = st.multiselect("Select SAP Note Year", df['sap_note_year'].unique(), default=df['sap_note_year'].unique())
+    year_filter = st.multiselect("Select SAP Note Year", df['sap_note_year'].unique(), default=sorted(df['sap_note_year'].unique()))
 with col3s:
     on = st.toggle(":blue[:material/neurology:] Rethink Priorities", key="on_rethink", help="Run process Rethink Priority Score")
 filtered_df = df[df['Priority'].isin(priority_filter) & df['sap_note_year'].isin(year_filter)]
@@ -268,8 +278,8 @@ fig_parallel = px.parallel_categories(
             'cvss_severity':'cvssSeverity'},
             color=dfp['sap_note_year'],
             #range_color=year_c[1])  '#4e79a7' #5f45bf '#3b2e8c' #5eadf2
-            color_continuous_scale=['#5eadf2','#3b2e8c','#ba38f2','#ff1493','#bf00c4',
-                                    '#210d4f','#610046','#070108'],
+            color_continuous_scale=['#210d4f','#610046','#070108','#04adbf','#4e79a7',
+                                    '#5f45bf','#5eadf2','#3b2e8c','#ba38f2','#ff1493','#bf00c4'],
             color_continuous_midpoint=2022)
 st.plotly_chart(fig_parallel, theme=None, use_container_width=True)
 

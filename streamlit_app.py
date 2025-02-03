@@ -162,7 +162,7 @@ col1s, col2s, col3s = st.columns([2,2,1], vertical_alignment='center')
 with col1s:
     priority_filter = st.multiselect("Select SAP Priority Level", df['Priority'].unique(), default=df['Priority'].unique())
 with col2s:
-    year_filter = st.multiselect("Select SAP Note Year", df['sap_note_year'].unique(), default=df['sap_note_year'].unique())
+    year_filter = st.multiselect("Select SAP Note Year", df['sap_note_year'].unique(), default=sorted(df['sap_note_year'].unique()))
 with col3s:
     on = st.toggle(":blue[:material/neurology:] Rethink Priorities", key="on_rethink", help="Run process Rethink Priority Score")
 

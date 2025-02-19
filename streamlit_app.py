@@ -12,7 +12,7 @@ import re
 @st.cache_data
 def load_data(use_history_file):
     if use_history_file:
-        df = pd.read_csv('data/sap_all_cve.csv')
+        df = pd.read_csv('data/sap_all_order.csv')
     else:
         df = pd.read_csv('data/sap_cve_2025_aws.csv')
     df.sort_values(by='cve_id', inplace=True)
@@ -125,7 +125,7 @@ else:
 
 
 # Sidebar
-st.sidebar.markdown('<div style="text-align: center;">Last updated 14-01-2025</div>', unsafe_allow_html=True)
+st.sidebar.markdown('<div style="text-align: center;">Last updated 11-02-2025</div>', unsafe_allow_html=True)
 sentiment_mapping = [":red[:material/thumb_down:]", ":green[:material/thumb_up:]"]
 st.sidebar.markdown('<div style="text-align: justify;"></br></br>How do you like this app?</div>', unsafe_allow_html=True)
 selected = st.sidebar.feedback("thumbs")

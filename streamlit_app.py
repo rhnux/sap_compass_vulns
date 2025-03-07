@@ -109,7 +109,7 @@ st.set_page_config(
 )
 
 # UI Components
-st.logo("https://dso-days-siteblog.vercel.app/assets/logo.png", link="https://dub.sh/dso-days", icon_image="https://dso-days-siteblog.vercel.app/assets/logo.png")
+st.logo("assets/logo.png", link="https://dub.sh/dso-days", icon_image="assets/logo.png")
 
 sac.divider(label="<img height='96' width='96' src='https://cdn.simpleicons.org/SAP/white' /> Compass Priority Vulnerabilities", color='#ffffff')
 

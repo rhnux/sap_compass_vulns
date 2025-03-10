@@ -267,7 +267,7 @@ with col2:
 
 
 st.subheader("Parallel Category Diagram", anchor=False)
-dfp = filtered_df[['sap_note_year','year','priority_l','priority','Priority','cvss_severity']]
+dfp = filtered_df[['sap_note_year','year','priority_l','priority','Priority','cvss_severity']].sort_values(by='sap_note_year')
 #dfp['team'] = pd.factorize(dfp['year'])[0].astype('int')
 fig_parallel = px.parallel_categories(
     dfp, dimensions=['sap_note_year','Priority','cvss_severity','priority_l','priority'],

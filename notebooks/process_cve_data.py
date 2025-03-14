@@ -143,8 +143,8 @@ def main(years: List[int], output_file: str) -> None:
         # Process data for each year
         dfs = []
         for year in years:
-            sploitscan_json = f'sap_history_data_curate/aws_{year}.json'
-            cve_prioritizer_csv = f'sap_history_data_curate/aws_{year}.csv'
+            sploitscan_json = f'aws_{year}.json'
+            cve_prioritizer_csv = f'aws_{year}.csv'
             sap_notes_csv = f'sap_notes_{year}.csv'
 
             logger.info(f"Processing data for year {year}...")

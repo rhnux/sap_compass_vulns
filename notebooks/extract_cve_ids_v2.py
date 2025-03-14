@@ -48,7 +48,7 @@ def extract_cve_ids_from_html(url: str) -> List[str]:
     """
     try:
         # Read the HTML table using pandas
-        df_list = pd.read_html(url, flavor='html5lib')
+        df_list = pd.read_html(url, flavor='html5lib', header=0)
         
         # Process the extracted data
         cve_ids = []
@@ -100,6 +100,7 @@ def main(year: int) -> None:
             urls = [
                 'https://support.sap.com/en/my-support/knowledge-base/security-notes-news/january-2025.html',
                 'https://support.sap.com/en/my-support/knowledge-base/security-notes-news/february-2025.html',
+                'https://support.sap.com/en/my-support/knowledge-base/security-notes-news/march-2025.html',
                 # Add more URLs for other months as needed
             ]
             cve_ids = []

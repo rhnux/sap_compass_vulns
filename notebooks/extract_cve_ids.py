@@ -96,7 +96,7 @@ def main(year: int) -> None:
             url = 'https://support.sap.com/en/my-support/knowledge-base/security-notes-news/bulletin-2024.html'
             cve_ids = extract_cve_ids_from_html(url)
         elif year == 2025:
-            url = 'https://support.sap.com/en/my-support/knowledge-base/security-notes-news/january-2025.html'
+            url = 'https://support.sap.com/en/my-support/knowledge-base/security-notes-news/march-2025.html'
             cve_ids = extract_cve_ids_from_html(url)
         else:
             raise ValueError(f"Unsupported year: {year}. Supported years are 2021, 2022, 2023, 2024, and 2025.")

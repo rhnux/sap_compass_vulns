@@ -151,9 +151,9 @@ with st.expander(f"Vulnerability Summary {ref_data_from}-2025", expanded=False, 
 
     with st.container():
         metrics = st.columns(4, gap='large')
-        for priority, color in zip(['Hot News', 'High', 'Medium', 'Low'], ['violet', 'red', 'orange', 'blue']):
+        for priority, color in zip(['Critical', 'High', 'Medium', 'Low'], ['violet', 'red', 'orange', 'blue']):
             value = total_by_priority.loc[total_by_priority['Priority'] == priority, 'v'].values[0]
-            metrics[['Hot News', 'High', 'Medium', 'Low'].index(priority)].metric(f":{color}[{priority}]", value=value)
+            metrics[['Critical', 'High', 'Medium', 'Low'].index(priority)].metric(f":{color}[{priority}]", value=value)
 
 st.divider()
 

@@ -101,6 +101,7 @@ def main(year: int) -> None:
                 'https://support.sap.com/en/my-support/knowledge-base/security-notes-news/january-2025.html',
                 'https://support.sap.com/en/my-support/knowledge-base/security-notes-news/february-2025.html',
                 'https://support.sap.com/en/my-support/knowledge-base/security-notes-news/march-2025.html',
+                'https://support.sap.com/en/my-support/knowledge-base/security-notes-news/april-2025.html',
                 # Add more URLs for other months as needed
             ]
             cve_ids = []

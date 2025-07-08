@@ -3,6 +3,7 @@ import streamlit_antd_components as sac
 import vulncheck_sdk
 import pandas as pd
 import plotly.express as px
+import logfire
 #import calplot
 
 # VulnCheck config
@@ -14,6 +15,11 @@ YEAR = 2025
 # Configure the VulnCheck API client
 configuration = vulncheck_sdk.Configuration(host=DEFAULT_API)
 configuration.api_key["Bearer"] = TOKEN
+
+# Config Logfire
+LOGFIRE = st.secrets["LOGFIRE"]
+logfire.configure(token=LOGFIRE)
+logfire.info('Vulncheck, {place}!', place='SAP COMPASS Vulns')
 
 @st.cache_data
 def get_df():
@@ -56,7 +62,7 @@ def get_df():
                 cursor=api_response.meta.next_cursor, limit=limit
             )
 
-            # Append the new data from the next page
+            # Append the new data from the next pa2025ge
             for entry in api_response.data:
                 cve.append(entry.cve[0])
                 vendor.append(entry.vendor_project)
@@ -96,12 +102,15 @@ st.logo("assets/logo.png", link="https://dub.sh/dso-days", icon_image="assets/lo
 sac.divider(label="<img height='96' width='96' src='https://cdn.simpleicons.org/SAP/white' /> Compass Priority Vulnerabilities", color='#ffffff')
 
 
-st.title("VulnCheck Known Exploited Vulnerabilties")
+st.title("VulnCheck Known Exploited Vulnerabilties", anchor=False)
 
 vuln_data = get_df()
+
+logfire.debug('Vulncheck, {place}!', place=vuln_data)
+
 #filtered_vuln_data = vuln_data[vuln_data['Vendor'].isin(priority_filter) & df['sap_note_year'].isin(year_filter)]
 filtered_vuln_data = vuln_data[vuln_data['Vendor'] == "SAP"]
-st.dataframe(filtered_vuln_data)
+st.dataframe(vuln_data)
 
 df_kev = vuln_data.copy()
 
@@ -167,9 +176,9 @@ styled_stats_df_kev = stats_df_kev.style \
 
 
 
-sac.divider(label="<img height='72' width='72' src='https://cdn.simpleicons.org/kdeneon/white' />  2025 Known Exploited Vulnerabilities Statistics", color='#ffffff')
+sac.divider(label="2025 Known Exploited Vulnerabilities Statistics", color='#ffffff')
 
-#st.title("2025 Known Exploited Vulnerabilities Statistics")
+#st.subheader("2025 Known Exploited Vulnerabilities Statistics", anchor=False)
 st.dataframe(styled_stats_df_kev)
 
 

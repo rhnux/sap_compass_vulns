@@ -269,6 +269,7 @@
 [theme]
 base="dark"
 primaryColor="#ff1493"
+borderColor="#04adbf"
 
 # The preset Streamlit theme that your custom theme inherits from.
 # One of "light" or "dark".

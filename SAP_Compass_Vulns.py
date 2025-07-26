@@ -21,6 +21,7 @@ def load_data(use_history_file):
     
     df['datePublished'] = pd.to_datetime(df['datePublished'], format='mixed', utc=True)
     df['dateUpdated'] = pd.to_datetime(df['dateUpdated'], format='mixed', utc=True)
+    df['monthName'] = df['dateUpdated'].dt.month_name()
     df['cwe_t25'] = df['cweId'].isin(ll_cwe_t25)
     
     df.drop_duplicates(subset=['Note#'], inplace=True)
@@ -109,7 +110,7 @@ st.set_page_config(
 )
 
 # UI Components
-st.logo("assets/logo.png", link="https://dub.sh/dso-days", icon_image="assets/logo.png")
+st.logo("assets/logo.png", link="https://dub.sh/dso-days", icon_image="assets/logo.png", size='large')
 
 sac.divider(label="<img height='96' width='96' src='https://cdn.simpleicons.org/SAP/white' /> Compass Priority Vulnerabilities", color='#ffffff')
 
@@ -157,16 +158,18 @@ with st.expander(f"Vulnerability Summary {ref_data_from}-2025", expanded=False, 
 
 st.divider()
 
-# Filters
-col1s, col2s, col3s = st.columns([2,2,1], vertical_alignment='center')
+# FiltersX
+col1s, col2s, col3s, col4s = st.columns([2,2,2,1], vertical_alignment='center')
 with col1s:
-    priority_filter = st.multiselect("Select SAP Priority Level", df['Priority'].unique(), default=df['Priority'].unique())
+    priority_filter = st.multiselect("Select SAP Priority Level", df['Priority'].unique(), default=['Critical','High','Medium','Low'])
 with col2s:
     year_filter = st.multiselect("Select SAP Note Year", df['sap_note_year'].unique(), default=sorted(df['sap_note_year'].unique()))
 with col3s:
+    month_filter = st.multiselect("Select Month", df['monthName'].unique(), default=sorted(df['monthName'].unique()))
+with col4s:
     on = st.toggle(":blue[:material/neurology:] Rethink Priorities", key="on_rethink", help="Run process Rethink Priority Score")
 
-filtered_df = df[df['Priority'].isin(priority_filter) & df['sap_note_year'].isin(year_filter)]
+filtered_df = df[df['Priority'].isin(priority_filter) & df['sap_note_year'].isin(year_filter) & df['monthName'].isin(month_filter)]
 
 st.divider()
 

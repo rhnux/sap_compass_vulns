@@ -97,7 +97,7 @@ st.set_page_config(
 )
 
 # UI Components
-st.logo("assets/logo.png", link="https://dub.sh/dso-days", icon_image="assets/logo.png")
+st.logo("assets/logo.png", link="https://dub.sh/dso-days", icon_image="assets/logo.png", size='large')
 
 sac.divider(label="<img height='96' width='96' src='https://cdn.simpleicons.org/SAP/white' /> Compass Priority Vulnerabilities", color='#ffffff')
 

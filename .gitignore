@@ -165,8 +165,10 @@ cython_debug/
 .streamlit/secrets.toml
 good2.py
 good_prac_version.py
+SAP_Compass_Vulns.py
 
 # Vercel
 =======
 .vercel
 .vscode
+.devcontainer

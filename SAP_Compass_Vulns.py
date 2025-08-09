@@ -159,17 +159,49 @@ with st.expander(f"Vulnerability Summary {ref_data_from}-2025", expanded=False, 
 st.divider()
 
 # FiltersX
+# ...existing code...
+
 col1s, col2s, col3s, col4s = st.columns([2,2,2,1], vertical_alignment='center')
 with col1s:
-    priority_filter = st.multiselect("Select SAP Priority Level", df['Priority'].unique(), default=['Critical','High','Medium','Low'])
+    priority_filter = st.multiselect(
+        "Select SAP Priority Level",
+        df['Priority'].unique(),
+        default=['Critical','High','Medium','Low']
+    )
 with col2s:
-    year_filter = st.multiselect("Select SAP Note Year", df['sap_note_year'].unique(), default=sorted(df['sap_note_year'].unique()))
+    year_filter = st.multiselect(
+        "Select SAP Note Year",
+        df['sap_note_year'].unique(),
+        default=sorted(df['sap_note_year'].unique())
+    )
 with col3s:
-    month_filter = st.multiselect("Select Month", df['monthName'].unique(), default=sorted(df['monthName'].unique()))
+    # Filtra los meses disponibles según los años seleccionados
+    months_available = (
+        df[df['sap_note_year'].isin(year_filter)]['monthName']
+        .dropna()
+        .unique()
+        .tolist()
+    )
+    months_available = sorted(months_available, key=lambda m: pd.to_datetime(m, format='%B').month)
+    month_filter = st.multiselect(
+        "Select Month",
+        months_available,
+        default=months_available
+    )
 with col4s:
-    on = st.toggle(":blue[:material/neurology:] Rethink Priorities", key="on_rethink", help="Run process Rethink Priority Score")
+    on = st.toggle(
+        ":blue[:material/neurology:] Rethink Priorities",
+        key="on_rethink",
+        help="Run process Rethink Priority Score"
+    )
 
-filtered_df = df[df['Priority'].isin(priority_filter) & df['sap_note_year'].isin(year_filter) & df['monthName'].isin(month_filter)]
+filtered_df = df[
+    (df['Priority'].isin(priority_filter)) &
+    (df['sap_note_year'].isin(year_filter)) &
+    (df['monthName'].isin(month_filter))
+]
+
+# ...existing code...
 
 st.divider()
 

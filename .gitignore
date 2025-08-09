@@ -163,9 +163,11 @@ cython_debug/
 
 # Streamlit
 .streamlit/secrets.toml
+.streamlit/config.json
 good2.py
 good_prac_version.py
 SAP_Compass_Vulns.py
+sap_cve_analysis_*/
 
 # Vercel
 =======

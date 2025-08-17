@@ -24,7 +24,75 @@ import glob
 import shutil
 
 # Configurar Rich Console
-console = Console()
+console = Console():
+sploitscan_df = pd.DataFrame()
+    if not skip_sploitscan and cve_list:
+        console.print("\n3️⃣ EJECUTANDO SPLOITSCAN")
+        console.print("-" * 40)
+        
+        sploitscan_file = automation.run_sploitscan(cve_list, sploitscan_path)
+        
+        if sploitscan_file:
+            # Copiar archivo al directorio de salida
+            sploitscan_source = os.path.join(sploitscan_path, sploitscan_file) if sploitscan_path != "." else sploitscan_file
+            sploitscan_dest = automation.output_dir / f"sploitscan_{year}{month:02d}.json"
+            
+            try:
+                shutil.copy(sploitscan_source, sploitscan_dest)
+                sploitscan_df = automation.dataframeSplotscan(str(sploitscan_dest))
+            except Exception as e:
+                console.print(f"❌ Error copiando archivo SploitScan: {e}")
+                sploitscan_df = automation.dataframeSplotscan(sploitscan_source)
+    
+    # Paso 4: Ejecutar CVE_Prioritizer
+    prioritizer_file = ""
+    if not skip_prioritizer and cve_list:
+        console.print("\n4️⃣ EJECUTANDO CVE_PRIORITIZER")
+        console.print("-" * 40)
+        
+        csv_file = f"prioritizer_{year}{month:02d}.csv"
+        
+        if automation.run_cve_prioritizer(prioritizer_string, csv_file, prioritizer_path):
+            # Copiar archivo al directorio de salida
+            prioritizer_source = os.path.join(prioritizer_path, csv_file) if prioritizer_path != "." else csv_file
+            prioritizer_dest = automation.output_dir / csv_file
+            
+            try:
+                shutil.copy(prioritizer_source, prioritizer_dest)
+                prioritizer_file = str(prioritizer_dest)
+            except Exception as e:
+                console.print(f"❌ Error copiando archivo CVE_Prioritizer: {e}")
+                if os.path.exists(prioritizer_source):
+                    prioritizer_file = prioritizer_source
+    
+    # Paso 5: Combinar resultados
+    console.print("\n5️⃣ COMBINANDO RESULTADOS")
+    console.print("-" * 40)
+    final_df = automation.merge_results(sap_df, sploitscan_df, prioritizer_file, year)
+    
+    # Paso 6: Guardar resultados
+    console.print("\n6️⃣ GUARDANDO RESULTADOS")
+    console.print("-" * 40)
+    if output_name is None:
+        output_name = f"sap_cve_{year}{month:02d}"
+    
+    output_file = automation.save_results(final_df, output_name)
+    
+    # Mostrar resumen
+    automation.print_summary(final_df)
+    
+    if output_file:
+        console.print(f"\n✅ ANÁLISIS COMPLETADO EXITOSAMENTE!")
+        console.print(f"📁 Archivo de salida: {output_file}")
+    else:
+        console.print(f"\n⚠️ Análisis completado con advertencias")
+
+@app.command()
+def test():
+    """🧪 Prueba simple de comandos"""
+    
+    console.print("🧪 PROBANDO COMANDOS")
+    console.print("="*40)
 
 # Configurar logging básico
 logging.basicConfig(level=logging.INFO)

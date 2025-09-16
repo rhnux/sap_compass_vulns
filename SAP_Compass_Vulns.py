@@ -136,6 +136,8 @@ st.sidebar.caption("Info and Details")
 st.sidebar.caption(":blue[:material/neurology:] [SAP Vulnerabilities - CVE-IDs](https://dso-days-siteblog.vercel.app/blog/sap-cve-ids/)")
 st.sidebar.caption(":blue[:material/neurology:] [SAP Vulnerabilities Summary 2024](https://dso-days-siteblog.vercel.app/blog/2024-sap-compass-vulns-summary/)")
 
+st.sidebar.caption(":blue[:material/south_america:] :blue-badge[AR]")
+
 # Main content
 #st.html("<img height='96' width='96' src='https://cdn.simpleicons.org/SAP/white' />")
 #st.title("SAP Compass Priority Vulnerabilities")
@@ -175,19 +177,38 @@ with col2s:
         default=sorted(df['sap_note_year'].unique())
     )
 with col3s:
-    # Filtra los meses disponibles según los años seleccionados
+    # Definir el orden correcto de los meses
+    month_order = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ]
+    
+    # Filtrar los meses disponibles según los años seleccionados
     months_available = (
         df[df['sap_note_year'].isin(year_filter)]['monthName']
         .dropna()
         .unique()
         .tolist()
     )
-    months_available = sorted(months_available, key=lambda m: pd.to_datetime(m, format='%B').month)
-    month_filter = st.multiselect(
+    
+    # Ordenar los meses disponibles según el orden cronológico correcto
+    months_available_ordered = [month for month in month_order if month in months_available]
+    
+    # Agregar opción "All" al inicio de la lista
+    months_options = ["All"] + months_available_ordered
+    
+    month_filter_selection = st.multiselect(
         "Select Month",
-        months_available,
-        default=months_available
+        months_options,
+        default=["All"]
     )
+    
+    # Procesar la selección: si "All" está seleccionado, usar todos los meses disponibles
+    if "All" in month_filter_selection:
+        month_filter = months_available_ordered
+    else:
+        month_filter = [m for m in month_filter_selection if m != "All"]
+   
 with col4s:
     on = st.toggle(
         ":blue[:material/neurology:] Rethink Priorities",
@@ -201,7 +222,147 @@ filtered_df = df[
     (df['monthName'].isin(month_filter))
 ]
 
-# ...existing code...
+# Agregar esta sección después de los filtros y antes de st.divider() (aproximadamente línea 180)
+
+# Vista Comparativa de Meses entre Años
+st.subheader("📊 Comparative Analysis: Vulnerabilities by Month across Years", anchor=False)
+
+with st.expander("Month vs Year Comparison", expanded=True, icon=":material/calendar_view_month:"):
+    
+    # Preparar datos para la comparación mensual
+    def prepare_monthly_comparison_data(df_data):
+        # Definir el orden correcto de los meses
+        month_order = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ]
+        
+        # Agrupar por año y mes
+        monthly_data = df_data.groupby(['sap_note_year', 'monthName']).size().reset_index(name='vulnerability_count')
+        
+        # Crear pivot table para facilitar la visualización
+        pivot_data = monthly_data.pivot(index='monthName', columns='sap_note_year', values='vulnerability_count').fillna(0)
+        
+        # Reordenar los meses cronológicamente
+        pivot_data = pivot_data.reindex([month for month in month_order if month in pivot_data.index])
+        
+        return pivot_data, monthly_data
+    
+    pivot_data, monthly_data = prepare_monthly_comparison_data(filtered_df)
+    
+    # Crear tabs para diferentes visualizaciones
+    tab1, tab2, tab3, tab4 = st.tabs(["📈 Line Chart", "📊 Bar Chart", "🔥 Heatmap", "📋 Summary"])
+    
+    with tab1:
+        st.subheader("Trend Analysis: Monthly Vulnerabilities by Year", anchor=False)
+        
+        # Convertir pivot_data para plotly
+        fig_line = go.Figure()
+        
+        colors = ['#ff1493', '#ba38f2', '#5eadf2', '#04adbf', '#3b2e8c', '#bf00c4', '#4e79a7', '#5f45bf']
+        
+        for i, year in enumerate(pivot_data.columns):
+            fig_line.add_trace(go.Scatter(
+                x=pivot_data.index,
+                y=pivot_data[year],
+                mode='lines+markers',
+                name=f'Year {year}',
+                line=dict(color=colors[i % len(colors)], width=3),
+                marker=dict(size=8)
+            ))
+        
+        fig_line.update_layout(
+            title="Monthly Vulnerability Trends Across Years",
+            xaxis_title="Month",
+            yaxis_title="Number of Vulnerabilities",
+            hovermode='x unified',
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        
+        st.plotly_chart(fig_line, use_container_width=True)
+    
+    with tab2:
+        st.subheader("Monthly Distribution: Vulnerabilities by Year", anchor=False)
+        
+        # Crear gráfico de barras agrupadas
+        fig_bar = px.bar(
+            monthly_data, 
+            x='monthName', 
+            y='vulnerability_count', 
+            color='sap_note_year',
+            title="Monthly Vulnerability Distribution by Year",
+            labels={
+                'monthName': 'Month',
+                'vulnerability_count': 'Number of Vulnerabilities',
+                'sap_note_year': 'Year'
+            },
+            color_discrete_sequence=['#ff1493', '#ba38f2', '#5eadf2', '#04adbf', '#3b2e8c', '#bf00c4', '#4e79a7', '#5f45bf']
+        )
+        
+        # Ordenar meses cronológicamente
+        month_order = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ]
+        fig_bar.update_xaxes(categoryorder='array', categoryarray=month_order)
+        fig_bar.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+        
+        st.plotly_chart(fig_bar, use_container_width=True)
+    
+    with tab3:
+        st.subheader("Heatmap: Vulnerability Intensity by Month and Year", anchor=False)
+        
+        # Crear heatmap
+        fig_heatmap = px.imshow(
+            pivot_data.T,  # Transponer para tener años en Y y meses en X
+            title="Vulnerability Heatmap: Intensity by Month and Year",
+            labels=dict(x="Month", y="Year", color="Vulnerabilities"),
+            color_continuous_scale='Viridis',
+            aspect="auto"
+        )
+        
+        fig_heatmap.update_layout(
+            xaxis_title="Month",
+            yaxis_title="Year"
+        )
+        
+        st.plotly_chart(fig_heatmap, use_container_width=True)
+    
+    with tab4:
+        st.subheader("Statistical Summary", anchor=False)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.write("**Top 5 Months (Total Vulnerabilities)**")
+            monthly_totals = pivot_data.sum(axis=1).sort_values(ascending=False).head(5)
+            for month, total in monthly_totals.items():
+                st.metric(month, int(total))
+        
+        with col2:
+            st.write("**Year with Most Vulnerabilities**")
+            yearly_totals = pivot_data.sum(axis=0).sort_values(ascending=False)
+            for year, total in yearly_totals.head(3).items():
+                st.metric(f"Year {year}", int(total))
+        
+        st.write("**Detailed Monthly Statistics by Year**")
+        st.dataframe(
+            pivot_data.round(0).astype(int),
+            use_container_width=True
+        )
+        
+        # Estadísticas adicionales
+        st.write("**Monthly Averages and Peaks**")
+        stats_df = pd.DataFrame({
+            'Month': pivot_data.index,
+            'Average': pivot_data.mean(axis=1).round(2),
+            'Peak Year': pivot_data.idxmax(axis=1),
+            'Peak Value': pivot_data.max(axis=1),
+            'Total': pivot_data.sum(axis=1)
+        })
+        st.dataframe(stats_df, hide_index=True, use_container_width=True)
+
+# Continúa con el resto del código original...# ...existing code...
 
 st.divider()
 
@@ -300,24 +461,61 @@ with col2:
 
 
 
+# Reemplaza la sección del Parallel Category Diagram (aproximadamente líneas 280-295)
 
 st.subheader("Parallel Category Diagram", anchor=False)
-dfp = filtered_df[['sap_note_year','year','priority_l','priority','Priority','cvss_severity']].sort_values(by='sap_note_year')
-#dfp['team'] = pd.factorize(dfp['year'])[0].astype('int')
-fig_parallel = px.parallel_categories(
-    dfp, dimensions=['sap_note_year','Priority','cvss_severity','priority_l','priority'],
-    labels={'sap_note_year':'Year',
-            'priority_l':'SploitScan',
-            'priority':'CVE-Prioritizer',
-            'Priority':'SAP',
-            'cvss_severity':'cvssSeverity'},
-            color=dfp['sap_note_year'],
-            #range_color=year_c[1])  '#4e79a7' #5f45bf '#3b2e8c' #5eadf2
-            color_continuous_scale=['#210d4f','#610046','#070108','#04adbf','#4e79a7',
-                                    '#5f45bf','#5eadf2','#3b2e8c','#ba38f2','#ff1493','#bf00c4'],
-            color_continuous_midpoint=2022)
-st.plotly_chart(fig_parallel, theme=None, use_container_width=True)
 
+# Preparar datos con categorías ordenadas
+dfp = filtered_df[['sap_note_year','year','priority_l','priority','Priority','cvss_severity']].copy()
+
+# Definir el orden específico para cada categoría
+sap_priority_order = ['Critical', 'High', 'Medium', 'Low']
+cvss_severity_order = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']
+sploitscan_order = ['A+', 'A', 'B', 'C', 'D', 'E']
+cve_prioritizer_order = ['Priority 1+', 'Priority 1', 'Priority 2', 'Priority 3', 'Priority 4']
+
+# Convertir a categorías ordenadas
+dfp['Priority'] = pd.Categorical(dfp['Priority'], categories=sap_priority_order, ordered=True)
+dfp['cvss_severity'] = pd.Categorical(dfp['cvss_severity'], categories=cvss_severity_order, ordered=True)
+dfp['priority_l'] = pd.Categorical(dfp['priority_l'], categories=sploitscan_order, ordered=True)
+dfp['priority'] = pd.Categorical(dfp['priority'], categories=cve_prioritizer_order, ordered=True)
+
+# Ordenar el DataFrame por año y luego por las categorías
+dfp = dfp.sort_values(by=['sap_note_year', 'Priority', 'cvss_severity', 'priority_l', 'priority'])
+
+# Crear el diagrama de categorías paralelas
+fig_parallel = px.parallel_categories(
+    dfp, 
+    dimensions=['sap_note_year', 'Priority', 'cvss_severity', 'priority_l', 'priority'],
+    labels={
+        'sap_note_year': 'Year',
+        'Priority': 'SAP Priority',
+        'cvss_severity': 'CVSS Severity',
+        'priority_l': 'SploitScan',
+        'priority': 'CVE-Prioritizer'
+    },
+    color=dfp['sap_note_year'],
+    color_continuous_scale=[
+        '#210d4f', '#610046', '#070108', '#04adbf', '#4e79a7',
+        '#5f45bf', '#5eadf2', '#3b2e8c', '#ba38f2', '#ff1493', '#bf00c4'
+    ],
+    color_continuous_midpoint=2022,
+    category_orders={
+        'Priority': sap_priority_order,
+        'cvss_severity': cvss_severity_order,
+        'priority_l': sploitscan_order,
+        'priority': cve_prioritizer_order
+    }
+)
+
+# Personalizar el layout del gráfico
+fig_parallel.update_layout(
+    title="Vulnerability Classification Flow: SAP → CVSS → SploitScan → CVE-Prioritizer",
+    font=dict(size=12),
+    margin=dict(t=80, l=25, r=25, b=25)
+)
+
+st.plotly_chart(fig_parallel, theme=None, use_container_width=True)
 
 
     

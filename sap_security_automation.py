@@ -19,91 +19,23 @@ import typer
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
+import requests
+from bs4 import BeautifulSoup
 import logging
 import glob
 import shutil
 
 # Configurar Rich Console
-console = Console():
-sploitscan_df = pd.DataFrame()
-    if not skip_sploitscan and cve_list:
-        console.print("\n3️⃣ EJECUTANDO SPLOITSCAN")
-        console.print("-" * 40)
-        
-        sploitscan_file = automation.run_sploitscan(cve_list, sploitscan_path)
-        
-        if sploitscan_file:
-            # Copiar archivo al directorio de salida
-            sploitscan_source = os.path.join(sploitscan_path, sploitscan_file) if sploitscan_path != "." else sploitscan_file
-            sploitscan_dest = automation.output_dir / f"sploitscan_{year}{month:02d}.json"
-            
-            try:
-                shutil.copy(sploitscan_source, sploitscan_dest)
-                sploitscan_df = automation.dataframeSplotscan(str(sploitscan_dest))
-            except Exception as e:
-                console.print(f"❌ Error copiando archivo SploitScan: {e}")
-                sploitscan_df = automation.dataframeSplotscan(sploitscan_source)
-    
-    # Paso 4: Ejecutar CVE_Prioritizer
-    prioritizer_file = ""
-    if not skip_prioritizer and cve_list:
-        console.print("\n4️⃣ EJECUTANDO CVE_PRIORITIZER")
-        console.print("-" * 40)
-        
-        csv_file = f"prioritizer_{year}{month:02d}.csv"
-        
-        if automation.run_cve_prioritizer(prioritizer_string, csv_file, prioritizer_path):
-            # Copiar archivo al directorio de salida
-            prioritizer_source = os.path.join(prioritizer_path, csv_file) if prioritizer_path != "." else csv_file
-            prioritizer_dest = automation.output_dir / csv_file
-            
-            try:
-                shutil.copy(prioritizer_source, prioritizer_dest)
-                prioritizer_file = str(prioritizer_dest)
-            except Exception as e:
-                console.print(f"❌ Error copiando archivo CVE_Prioritizer: {e}")
-                if os.path.exists(prioritizer_source):
-                    prioritizer_file = prioritizer_source
-    
-    # Paso 5: Combinar resultados
-    console.print("\n5️⃣ COMBINANDO RESULTADOS")
-    console.print("-" * 40)
-    final_df = automation.merge_results(sap_df, sploitscan_df, prioritizer_file, year)
-    
-    # Paso 6: Guardar resultados
-    console.print("\n6️⃣ GUARDANDO RESULTADOS")
-    console.print("-" * 40)
-    if output_name is None:
-        output_name = f"sap_cve_{year}{month:02d}"
-    
-    output_file = automation.save_results(final_df, output_name)
-    
-    # Mostrar resumen
-    automation.print_summary(final_df)
-    
-    if output_file:
-        console.print(f"\n✅ ANÁLISIS COMPLETADO EXITOSAMENTE!")
-        console.print(f"📁 Archivo de salida: {output_file}")
-    else:
-        console.print(f"\n⚠️ Análisis completado con advertencias")
-
-@app.command()
-def test():
-    """🧪 Prueba simple de comandos"""
-    
-    console.print("🧪 PROBANDO COMANDOS")
-    console.print("="*40)
+console = Console()
 
 # Configurar logging básico
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # Crear la app Typer
 app = typer.Typer(help="🔒 SAP CVE Automation Tool")
 
 class SAPCVEAutomation:
-    """Clase principal para automatizar el análisis de CVEs de SAP"""
-    
     def __init__(self):
         self.months = {
             1: 'january', 2: 'february', 3: 'march', 4: 'april',
@@ -112,59 +44,64 @@ class SAPCVEAutomation:
         }
         self.output_dir = Path(f"sap_cve_analysis_{datetime.now().strftime('%Y%m%d')}")
         self.output_dir.mkdir(exist_ok=True)
-        
-    def extract_sap_data(self, year: int, month: int) -> List:
-        """Extrae datos de vulnerabilidades SAP del mes especificado"""
+
+    def extract_sap_data(self, year: int, month: int) -> pd.DataFrame:
+        """Extrae y parsea todas las tablas SAP con BeautifulSoup"""
         month_name = self.months.get(month, '')
-        url = f'https://support.sap.com/en/my-support/knowledge-base/security-notes-news/{month_name}-{year}.html'
-        
+        url = f"https://support.sap.com/en/my-support/knowledge-base/security-notes-news/{month_name}-{year}.html"
+
         console.print(f"📡 Extrayendo datos de SAP: {month_name.title()} {year}")
         console.print(f"🌐 URL: {url}")
-        
-        try:
-            console.print("⏳ Descargando datos de SAP...")
-            sap_data = pd.read_html(url, flavor='html5lib', header=0)
-            
-            if not sap_data:
-                console.print("❌ No se encontraron datos en la página de SAP")
-                return []
-                
-            console.print(f"✅ Datos extraídos exitosamente ({len(sap_data)} tablas encontradas)")
-            return sap_data
-            
-        except Exception as e:
-            console.print(f"❌ Error extrayendo datos de SAP: {str(e)}")
-            logger.error(f"Error detallado: {str(e)}")
-            return []
+
+        resp = requests.get(url, timeout=30)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "lxml")
+
+        tables = soup.find_all("table")
+        console.print(f"📊 Encontradas {len(tables)} tablas en la página")
+
+        all_rows = []
+        for idx, tbl in enumerate(tables, start=1):
+            for tr in tbl.find_all("tr"):
+                cells = [td.get_text(" ", strip=True) for td in tr.find_all(["td", "th"])]
+                if cells:
+                    all_rows.append(cells)
+
+        note_pattern = re.compile(r'[23]\d{6,7}')
+        cve_pattern = re.compile(r'CVE-\d{4}-\d{4,7}')
+
+        valid_rows = [
+            row for row in all_rows
+            if any(note_pattern.search(cell) or cve_pattern.search(cell) for cell in row)
+        ]
+
+        df = pd.DataFrame(valid_rows)
+        console.print(f"✅ Filtradas {len(df)} filas válidas con Notas o CVEs")
+        return df
     
-    def process_sap_data(self, sap_data: List) -> tuple:
-        """Procesa los datos de SAP y extrae CVE-IDs - Replica exactamente tu notebook"""
-        if not sap_data:
+    def process_sap_data(self, df: pd.DataFrame) -> tuple:
+        """Procesa filas extraídas y normaliza CVEs"""
+        if df.empty:
             return pd.DataFrame(), []
-        
-        console.print("🔄 Procesando datos de SAP...")
-        
-        try:
-            # Usar exactamente la misma función de tu notebook
-            def etData1(x):
-                _df = pd.DataFrame(x[0], columns=['Note#', 'Title', 'Priority', 'CVSS'])
-                _df["cve_id"] = _df["Title"].str.extract(r'(CVE-....-\d+)')
-                return _df
-            
-            # Procesar igual que en tu notebook
-            sap_df = etData1(sap_data)
-            
-            # Obtener lista de CVEs igual que en tu notebook
-            l_sap_cve = sap_df.cve_id.to_list()
-            clean_sap_cve = [x for x in l_sap_cve if str(x) != 'nan']
-            
-            console.print(f"✅ Procesados {len(sap_df)} registros, encontrados {len(clean_sap_cve)} CVE-IDs")
-            
-            return sap_df, clean_sap_cve
-            
-        except Exception as e:
-            console.print(f"❌ Error procesando datos: {str(e)}")
-            return pd.DataFrame(), []
+
+        # Renombrar columnas genéricas
+        col_count = df.shape[1]
+        col_names = [f"Col{i}" for i in range(col_count)]
+        df.columns = col_names
+
+        # Buscar CVEs en cualquier columna
+        df["cve_id"] = df.apply(
+            lambda row: next(
+                (m.group(0) for cell in row.astype(str) if (m := re.search(r'CVE-\d{4}-\d{4,7}', cell))),
+                None
+            ),
+            axis=1
+        )
+
+        cves = df["cve_id"].dropna().unique().tolist()
+        console.print(f"✅ Procesados {len(df)} registros, encontrados {len(cves)} CVEs")
+
+        return df, cves
     
     def create_cve_strings(self, cve_list: List[str]) -> tuple:
         """Crea strings de CVEs para las herramientas - igual que tu notebook"""
@@ -186,77 +123,87 @@ class SAPCVEAutomation:
         return result_string_cve, prioritizer_string
     
     def run_sploitscan(self, cve_list: List[str], tool_path: str = ".") -> str:
-        """Ejecuta SploitScan - ARREGLADO para pasar CVEs individualmente"""
-        console.print("🔍 Ejecutando SploitScan...")
+        """Ejecuta SploitScan en lotes para evitar timeouts y problemas de línea de comandos."""
+        console.print("🔍 Ejecutando SploitScan en lotes...")
         console.print(f"CVEs a procesar: {len(cve_list)} CVEs")
-        console.print(f"Primeros CVEs: {cve_list[:5]}")
         
         original_dir = os.getcwd()
-        
+        all_sploitscan_results = []
+        CHUNK_SIZE = 10  # Procesar en lotes de 10 para evitar timeouts
+
         try:
             if tool_path != "." and os.path.exists(tool_path):
                 os.chdir(tool_path)
                 console.print(f"📁 Cambiado a directorio: {tool_path}")
-            
-            # Construir comando: sploitscan CVE1 CVE2 CVE3 ... -m ... -d -e json
-            cmd = ["sploitscan"] + cve_list + ["-m", "cisa,epss,prio,references", "-d", "-e", "json"]
-            
-            console.print(f"🔄 Ejecutando comando con {len(cve_list)} CVEs")
-            console.print(f"Comando: sploitscan {' '.join(cve_list[:3])}{'...' if len(cve_list) > 3 else ''} -m cisa,epss,prio,references -d -e json")
-            
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
-            
-            console.print(f"📊 Return code: {result.returncode}")
-            
-            if result.stdout:
-                console.print(f"📄 STDOUT:\n{result.stdout}")
-            
-            if result.stderr:
-                console.print(f"⚠️ STDERR:\n{result.stderr}")
-            
-            if result.returncode == 0:
-                console.print("✅ SploitScan ejecutado exitosamente")
+
+            for i in range(0, len(cve_list), CHUNK_SIZE):
+                chunk = cve_list[i:i + CHUNK_SIZE]
+                num_lote = (i // CHUNK_SIZE) + 1
+                total_lotes = (len(cve_list) + CHUNK_SIZE - 1) // CHUNK_SIZE
                 
-                # Buscar archivo JSON generado
-                time.sleep(2)  # Esperar que se escriba el archivo
+                console.print(f"\n🔄 Procesando lote {num_lote}/{total_lotes} ({len(chunk)} CVEs)...")
                 
-                patterns = [
-                    "*_and_*more_export.json",
-                    "*_export.json", 
-                    "sploitscan_*.json",
-                    "*.json"
-                ]
+                cmd = ["sploitscan"] + chunk + ["-c", "config.json", "-m", "cisa,epss,prio,references", "-d", "-e", "json"]
                 
-                for pattern in patterns:
-                    matching_files = glob.glob(pattern)
-                    if matching_files:
-                        # Tomar el archivo más reciente
-                        generated_file = max(matching_files, key=os.path.getmtime)
-                        console.print(f"✅ Archivo encontrado: {generated_file}")
-                        return generated_file
-                
-                console.print("⚠️ SploitScan completado pero no se encontró archivo JSON")
-                # Listar archivos para debug
-                all_files = os.listdir(".")
-                json_files = [f for f in all_files if f.endswith('.json')]
-                console.print(f"📋 Archivos JSON en directorio: {json_files}")
+                try:
+                    # Obtener la lista de archivos JSON antes de ejecutar
+                    files_before = set(glob.glob("*_export.json")) | set(glob.glob("*_and_*more_export.json"))
+
+                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=300) # Timeout de 5 mins por lote
+
+                    if result.returncode != 0:
+                        console.print(f"⚠️  Lote {num_lote} falló. Código: {result.returncode}.")
+                        if result.stderr:
+                            console.print(f"   STDERR: {result.stderr.strip()[:200]}...")
+                        continue
+
+                    time.sleep(2) # Esperar que se escriba el archivo
+                    
+                    # Encontrar el nuevo archivo generado
+                    files_after = set(glob.glob("*_export.json")) | set(glob.glob("*_and_*more_export.json"))
+                    new_files = files_after - files_before
+
+                    if not new_files:
+                        console.print(f"⚠️ No se encontró el archivo JSON para el lote {num_lote}.")
+                        # Fallback al método de archivo más reciente si no se encuentra uno nuevo
+                        all_files = list(files_after)
+                        if not all_files: continue
+                        generated_file = max(all_files, key=os.path.getmtime)
+                    else:
+                        generated_file = new_files.pop()
+
+                    console.print(f"✅ Lote {num_lote} procesado. Archivo: '{generated_file}'")
+
+                    with open(generated_file, 'r') as f:
+                        data = json.load(f)
+                        all_sploitscan_results.extend(data)
+                    
+                    os.remove(generated_file)
+                    console.print(f"   -> Archivo temporal procesado y eliminado.")
+
+                except subprocess.TimeoutExpired:
+                    console.print(f"⏰ Timeout en lote {num_lote}. Saltando al siguiente.")
+                except FileNotFoundError:
+                    console.print("❌ Comando 'sploitscan' no encontrado. Abortando ejecución de SploitScan.")
+                    return ""
+                except Exception as e:
+                    console.print(f"❌ Error inesperado en lote {num_lote}: {e}")
+
+            if not all_sploitscan_results:
+                console.print("❌ No se generaron resultados de SploitScan.")
                 return ""
-                
-            else:
-                console.print(f"❌ SploitScan falló con código: {result.returncode}")
-                return ""
-                
-        except subprocess.TimeoutExpired:
-            console.print("⏰ Timeout en SploitScan (600 segundos)")
-            return ""
-        except FileNotFoundError:
-            console.print("❌ Comando 'sploitscan' no encontrado")
-            console.print("💡 Verificar que SploitScan esté instalado globalmente")
-            return ""
+
+            # Guardar el resultado consolidado
+            merged_filename = f"sploitscan_consolidated_{datetime.now().strftime('%Y%m%d%H%M%S')}.json"
+            with open(merged_filename, 'w') as f:
+                json.dump(all_sploitscan_results, f, indent=4)
+            
+            console.print(f"\n✅ SploitScan completado. Resultados guardados en: {merged_filename}")
+            return merged_filename
+
         except Exception as e:
-            console.print(f"❌ Error ejecutando SploitScan: {str(e)}")
+            console.print(f"❌ Error general en la ejecución de SploitScan: {e}")
             return ""
-            
         finally:
             os.chdir(original_dir)
     
@@ -475,9 +422,9 @@ def analyze(
     console.print("-" * 40)
     sap_data = automation.extract_sap_data(year, month)
     
-    if not sap_data:
-        console.print("❌ No se pudieron obtener datos de SAP. Abortando.")
-        raise typer.Exit(1)
+    #if not sap_data:
+    #    console.print("❌ No se pudieron obtener datos de SAP. Abortando.")
+    #    raise typer.Exit(1)
     
     # Paso 2: Procesar datos
     console.print("\n2️⃣ PROCESANDO DATOS SAP")
@@ -565,7 +512,7 @@ def test():
     # Probar SploitScan
     console.print("\n🔍 Probando SploitScan:")
     try:
-        result = subprocess.run(["sploitscan", "--version"], capture_output=True, text=True, timeout=5)
+        result = subprocess.run(["sploitscan", "--help"], capture_output=True, text=True, timeout=5)
         if result.returncode == 0:
             console.print("✅ sploitscan - FUNCIONA")
         else:
@@ -576,7 +523,7 @@ def test():
     # Probar CVE_Prioritizer
     console.print("\n📊 Probando CVE_Prioritizer:")
     try:
-        result = subprocess.run(["cve_prioritizer", "--version"], capture_output=True, text=True, timeout=5)
+        result = subprocess.run(["cve_prioritizer", "--help"], capture_output=True, text=True, timeout=5)
         if result.returncode == 0:
             console.print("✅ cve_prioritizer - FUNCIONA")
         else:

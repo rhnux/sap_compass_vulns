@@ -1,15 +1,16 @@
 # Stage 1 - Build Stage
-FROM python:3.11-slim AS builder
+FROM python:3.12.11-alpine3.20 AS builder
 
-# Install system dependencies and create a non-root user
-RUN groupadd --gid 1000 appuser \
+# Install system dependencies, upgrade packages, and create a non-root user
+RUN apk update && apk upgrade \
+    && groupadd --gid 1000 appuser \
     && useradd --uid 1000 --gid 1000 -ms /bin/bash appuser
 
 # Install pip and virtualenv
 RUN pip install --no-cache-dir --upgrade pip virtualenv
 
 # Install build essentials and other necessary tools
-RUN apt-get update && apt-get install -y build-essential software-properties-common git
+RUN apk add --no-cache build-base git
 
 # Switch to the non-root user
 USER appuser
@@ -31,11 +32,10 @@ ENV TZ=America/Argentina/Buenos_Aires
 RUN python -m venv ${VIRTUAL_ENV}
 RUN . ${VIRTUAL_ENV}/bin/activate && pip install -r requirements.txt
 
-# Stage 2 - Production Image
-FROM python:3.11-slim AS production
-
-# Create a non-root user to run the application
-RUN groupadd --system appuser \
+FROM python:3.12.11-alpine3.20 AS production
+# Upgrade packages and create a non-root user to run the application
+RUN apk update && apk upgrade \
+    && groupadd --system appuser \
     && useradd --system --gid appuser appuser
 
 # Switch to the non-root user

@@ -2,10 +2,10 @@ altair==5.5.0
 annotated-types==0.7.0
 anyio==4.6.0
 attrs==24.2.0
-beautifulsoup4==4.12.3
+beautifulsoup4==4.14.2
 blinker==1.8.2
 cachetools==5.5.0
-certifi==2024.8.30
+certifi==2025.8.3
 charset-normalizer==3.3.2
 click==8.1.7
 colorama==0.4.6
@@ -13,6 +13,7 @@ contourpy==1.3.2
 cve-prioritizer==1.10.1
 cycler==0.12.1
 distro==1.9.0
+et_xmlfile==2.0.0
 executing==2.2.0
 fonttools==4.58.5
 gitdb==4.0.11
@@ -41,6 +42,7 @@ mdurl==0.1.2
 narwhals==2.0.1
 numpy==2.2.2
 openai==1.30.5
+openpyxl==3.1.5
 opentelemetry-api==1.34.1
 opentelemetry-exporter-otlp-proto-common==1.34.1
 opentelemetry-exporter-otlp-proto-http==1.34.1
@@ -65,7 +67,7 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 pytz==2024.2
 referencing==0.35.1
-requests==2.32.3
+requests==2.32.5
 rich==13.8.1
 rpds-py==0.20.0
 rsa==4.9
@@ -76,7 +78,7 @@ smmap==5.0.1
 sniffio==1.3.1
 soupsieve==2.6
 sploitscan==0.11.0
-streamlit==1.48.0
+streamlit==1.50.0
 streamlit-antd-components==0.3.2
 tabula==1.0.5
 tabula-py==2.10.0
@@ -89,7 +91,7 @@ typer==0.16.0
 typing_extensions==4.12.2
 tzdata==2024.2
 urllib3==2.2.3
-vulncheck_sdk==0.0.13
+vulncheck_sdk==0.0.23
 watchdog==4.0.2
 webencodings==0.5.1
 websockets==14.2

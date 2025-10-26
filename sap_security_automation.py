@@ -341,6 +341,20 @@ class SAPCVEAutomation:
             
             # Añadir año igual que en tu notebook
             result_df['sap_note_year'] = str(year)
+
+            # Renombrar columnas
+            result_df.rename(columns={'Col0': 'Note#', 'Col1': 'Title', 'Col2': 'Priority', 'Col3': 'CVSS'}, inplace=True)
+            
+            # Orden final de columnas
+            final_cols = ['cve_id', 'datePublished', 'dateUpdated',
+                          'descriptions', 'product_l', 'epss_l', 'percentile', 'priority_l', 'cweId', 
+                          'note_id', 'Note#', 'Title', 'Priority', 'CVSS', 'priority', 'epss', 'cvss', 'cvss_version',
+                          'cvss_severity', 'kev', 'ransomware', 'kev_source', 'cpe', 'vendor',
+                          'product', 'vector', 'sap_note_year']
+            
+            # Filtrar columnas existentes en el dataframe para evitar errores
+            existing_cols = [col for col in final_cols if col in result_df.columns]
+            result_df = result_df[existing_cols]
             
             console.print(f"✅ Combinación completada. Total registros: {len(result_df)}")
             return result_df

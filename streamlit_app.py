@@ -15,15 +15,15 @@ def load_data(use_history_file):
         df = pd.read_csv('data/sap_all_order.csv')
     else:
         df = pd.read_csv('data/sap_cve_2025_aws.csv')
-    df.sort_values(by='cve_id', inplace=True)
+    df = df.sort_values(by='cve_id')
     cwe_top_25 = pd.read_csv('data/cwe_top_25_2024.csv')
     ll_cwe_t25 = list(cwe_top_25['ID'])
     
-    df['datePublished'] = pd.to_datetime(df['datePublished'], format='mixed', utc=True)
-    df['dateUpdated'] = pd.to_datetime(df['dateUpdated'], format='mixed', utc=True)
+    df['datePublished'] = pd.to_datetime(df['datePublished'], utc=True)
+    df['dateUpdated'] = pd.to_datetime(df['dateUpdated'], utc=True)
     df['cwe_t25'] = df['cweId'].isin(ll_cwe_t25)
     
-    df.drop_duplicates(subset=['Note#'], inplace=True)
+    df = df.drop_duplicates(subset=['Note#'])
     
     df['sap_note_year'] = df['sap_note_year'].astype('category')
     df['year'] = pd.to_datetime(df['sap_note_year'], format='%Y', utc=True)
@@ -32,7 +32,7 @@ def load_data(use_history_file):
     df['priority_l'] = df['priority_l'].astype('category')
     df['Priority'] = df['Priority'].astype('category')
     df['cvss_severity'] = df['cvss_severity'].astype('category')
-    df['kev'].fillna(False, inplace=True)
+    df['kev'] = df['kev'].fillna(False)
     df['cveInfo'] = df['cve_id'].apply(lambda x: f'https://www.cvedetails.com/cve/{x}')
     df['cveSAP'] = df['cve_id'].apply(lambda x: f'https://www.cve.org/CVERecord?id={x}')
     df['epss'] = (df['epss'] * 100).astype('float').round(2)
@@ -109,7 +109,7 @@ st.set_page_config(
 )
 
 # UI Components
-st.logo("assets/logo.png", link="https://dub.sh/dso-days", icon_image="assets/logo.png", size='large')
+st.sidebar.logo("assets/logo.png", link="https://dub.sh/dso-days", icon_image="assets/logo.png")
 
 sac.divider(label="<img height='96' width='96' src='https://cdn.simpleicons.org/SAP/white' /> Compass Priority Vulnerabilities", color='#ffffff')
 
@@ -136,18 +136,15 @@ st.sidebar.caption(":blue[:material/neurology:] [SAP Vulnerabilities - CVE-IDs](
 st.sidebar.caption(":blue[:material/neurology:] [SAP Vulnerabilities Summary 2024](https://dso-days-siteblog.vercel.app/blog/2024-sap-compass-vulns-summary/)")
 
 # Main content
-#st.html("<img height='96' width='96' src='https://cdn.simpleicons.org/SAP/white' />")
-#st.title("SAP Compass Priority Vulnerabilities")
 
-#st.toast('New 2024 CWE Top 25 for Rethink process', icon=":material/emergency_heat:")
 
 
 with st.expander(f"Vulnerability Summary {ref_data_from}-2025", expanded=False, icon=":material/explore:"):
     st.header(f"From January {ref_data_from} to date, :blue[{df.shape[0]} SAP Notes] related to :orange[{len(df['cve_id'].unique())} CVE-IDs] are reported.", anchor=False)
 
-    count_by_month = df.groupby([df['datePublished'].dt.to_period('M'), 'Priority']).size().reset_index(name='v')
+    count_by_month = df.groupby([df['datePublished'].dt.tz_localize(None).dt.to_period('M'), 'Priority'], observed=False).size().reset_index(name='v')
     count_by_month['cumulative_v'] = count_by_month.groupby('Priority')['v'].cumsum()
-    total_by_priority = count_by_month.groupby('Priority')['v'].sum().reset_index()
+    total_by_priority = count_by_month.groupby('Priority', observed=False)['v'].sum().reset_index()
 
     with st.container():
         metrics = st.columns(4, gap='large')
@@ -166,7 +163,7 @@ with col2s:
 with col3s:
     on = st.toggle(":blue[:material/neurology:] Rethink Priorities", key="on_rethink", help="Run process Rethink Priority Score")
 
-filtered_df = df[df['Priority'].isin(priority_filter) & df['sap_note_year'].isin(year_filter)]
+filtered_df = df[df['Priority'].isin(priority_filter) & df['sap_note_year'].isin(year_filter)].copy()
 
 st.divider()
 
@@ -215,7 +212,7 @@ if on:
                         'epss_avg','kev_score','cvss_score','epss_score','cwe_score','priority_score',
                         'composite_score','vendor','product_l','descriptions']],
                 column_config={
-                    "cveInfo": st.column_config.LinkColumn("cveInfo", help="CVE Details", max_chars=50, display_text=r"(CVE-....-\d+)", pinned=True),
+                    "cveInfo": st.column_config.LinkColumn("cveInfo", help="CVE Details", max_chars=50, display_text=r"(CVE-....-\\d+)", pinned=True),
                     "epss_l_30": st.column_config.AreaChartColumn("EPSS (Last 30 days)", y_min=0, y_max=100),
                     "composite_score": st.column_config.NumberColumn("Score", help="Rethink Priority Score.", format="%.2f"),
                 },
@@ -249,8 +246,6 @@ with col1:
     st.scatter_chart(chart_data,
                     y="epss",
                     x="cvss",
-                    x_label="CVSS Score",
-                    y_label="EPSS %",
                     color="#ff1493",
                     use_container_width=True)
 

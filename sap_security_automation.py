@@ -143,7 +143,7 @@ class SAPCVEAutomation:
                 
                 console.print(f"\n🔄 Procesando lote {num_lote}/{total_lotes} ({len(chunk)} CVEs)...")
                 
-                cmd = ["sploitscan"] + chunk + ["-c", "config.json", "-m", "cisa,epss,prio,references", "-d", "-e", "json"]
+                cmd = ["sploitscan"] + chunk + ["-c", ".streamlit/config.json", "-m", "cisa,epss,prio,references", "-d", "-e", "json"]
                 
                 try:
                     # Obtener la lista de archivos JSON antes de ejecutar

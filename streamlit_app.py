@@ -128,7 +128,7 @@ else:
 
 
 # Sidebar
-st.sidebar.markdown('<div style="text-align: center;">Last updated 14-10-2025</div>', unsafe_allow_html=True)
+st.sidebar.markdown('<div style="text-align: center;">Last updated 11-11-2025</div>', unsafe_allow_html=True)
 sentiment_mapping = [":red[:material/thumb_down:]", ":green[:material/thumb_up:]"]
 st.sidebar.markdown('<div style="text-align: justify;"></br></br>How do you like this app?</div>', unsafe_allow_html=True)
 selected = st.sidebar.feedback("thumbs")

@@ -154,11 +154,77 @@ with st.expander(f"Vulnerability Summary {ref_data_from}-2025", expanded=False, 
     #count_by_month['cumulative_v'] = count_by_month.groupby('Priority')['v'].cumsum()
     total_by_priority = count_by_month.groupby('Priority')['v'].sum().reset_index()
 
+    today_utc = pd.Timestamp.now(tz='UTC')
+    twelve_months_ago = today_utc - pd.DateOffset(years=1)
+    last_12_months_df = df[df['datePublished'] >= twelve_months_ago]
+
     with st.container():
         metrics = st.columns(4, gap='large')
-        for priority, color in zip(['Critical', 'High', 'Medium', 'Low'], ['violet', 'red', 'orange', 'blue']):
-            value = total_by_priority.loc[total_by_priority['Priority'] == priority, 'v'].values[0]
-            metrics[['Critical', 'High', 'Medium', 'Low'].index(priority)].metric(f":{color}[{priority}]", value=value)
+        priorities = ['Critical', 'High', 'Medium', 'Low']
+        colors = ['violet', 'red', 'orange', 'blue']
+        
+        # Mapping streamlit colors to hex for plotly
+        color_map = {
+            'violet': '#ba38f2',
+            'red': '#ff4b4b',
+            'orange': '#ffa500',
+            'blue': '#0080ff'
+        }
+
+        # --- Prepare data for all sparklines and deltas ---
+        # Use a period range for the last 12 full months for robustness
+        today_utc = pd.Timestamp.now(tz='UTC')
+        end_period = today_utc.to_period('M')
+        start_period = (today_utc - pd.DateOffset(months=11)).to_period('M')
+        full_period_range = pd.period_range(start=start_period, end=end_period, freq='M')
+
+        # Group all data by month and priority in one go
+        all_monthly_counts = df.groupby([df['datePublished'].dt.to_period('M'), 'Priority']).size().unstack(fill_value=0)
+        
+        # Reindex to ensure all 12 months are present for all priorities
+        all_monthly_counts = all_monthly_counts.reindex(full_period_range, fill_value=0)
+
+        for i, (priority, color) in enumerate(zip(priorities, colors)):
+            # Total value for the metric
+            total_value_series = total_by_priority.loc[total_by_priority['Priority'] == priority, 'v']
+            total_value = total_value_series.values[0] if not total_value_series.empty else 0
+
+            # --- Monthly data for sparkline (last 12 months) ---
+            if priority in all_monthly_counts.columns:
+                monthly_counts = all_monthly_counts[priority]
+            else:
+                # If a priority has no vulns, create a series of zeros
+                monthly_counts = pd.Series([0] * 12, index=full_period_range)
+
+            # --- Delta calculation ---
+            delta = 0
+            if len(monthly_counts) >= 2:
+                # Compare the last two months in the 12-month period
+                delta = int(monthly_counts.iloc[-1] - monthly_counts.iloc[-2])
+
+            with metrics[i]:
+                delta_color = "inverse" if delta != 0 else "off"
+                st.metric(f":{color}[{priority}]", value=total_value, delta=delta, delta_color=delta_color, help="Delta from previous month")
+                
+                # --- Sparkline ---
+                spark_fig = go.Figure(go.Scatter(
+                    y=monthly_counts.values,
+                    x=monthly_counts.index.to_timestamp(), # Convert period index to timestamp for plotting
+                    mode='lines',
+                    fill='tozeroy',
+                    line_color=color_map.get(color, color), # Use mapped color, fallback to original
+                    hoverinfo='none' # Clean look
+                ))
+                spark_fig.update_layout(
+                    height=60, # Small height for sparkline
+                    margin=dict(l=0, r=0, t=5, b=0), # Tight margin
+                    xaxis=dict(visible=False),
+                    yaxis=dict(visible=False),
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    showlegend=False,
+                )
+                st.plotly_chart(spark_fig, use_container_width=True, config={'displayModeBar': False})
 
 st.divider()
 
@@ -378,7 +444,7 @@ with st.expander("Comparative Analysis: Vulnerabilities by Month across Years",
         #monthly_data = df_data.groupby(['sap_note_year', 'monthName']).size().reset_index(name='vulnerability_count')
         #st.write(monthly_data)
 
-        monthly_data = df_data.groupby([df['datePublished'].dt.to_period('M')]).size().reset_index(name='vulnerability_count')
+        monthly_data = df_data.groupby(df_data['datePublished'].dt.to_period('M')).size().reset_index(name='vulnerability_count')
         monthly_data['monthName'] = monthly_data['datePublished'].apply(lambda x: x.strftime('%B'))
         monthly_data['sap_note_year'] = monthly_data['datePublished'].apply(lambda x: x.strftime('%Y'))
         #st.write(monthly_data)

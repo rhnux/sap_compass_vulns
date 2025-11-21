@@ -168,6 +168,11 @@ good2.py
 good_prac_version.py
 SAP_Compass_Vulns.py
 sap_cve_analysis_*/
+sap_cve_updater/.sploitscan 
+sap_cve_updater/checkpoint.json
+sap_cve_updater/cve_prioritizer_logs.txt
+sap_cve_updater/update_log.txt
+
 
 # Vercel
 =======

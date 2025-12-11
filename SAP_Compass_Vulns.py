@@ -50,7 +50,7 @@ def fetch_epss_data(cve):
     return [float(l['epss'])*100 for l in reversed(epss_ts['time-series'])]
 
 # Select A+|1+ CVEs & Get EPSS data of TOP Priorities CVEs
-@st.cache_data
+@st.cache_datat
 def sap_cve_top_priority(xdf):
     #sap_cve_top = xdf[(xdf['priority_l'].isin(['A+', 'B'])) | (xdf['priority'] == 'Priority 1+')]
     sap_cve_top = xdf[(xdf['priority_l'].isin(['A+'])) |
@@ -128,7 +128,7 @@ else:
 
 
 # Sidebar
-st.sidebar.markdown('<div style="text-align: center;">Last updated 14-10-2025</div>', unsafe_allow_html=True)
+st.sidebar.markdown('<div style="text-align: center;">Last updated 09-12-2025</div>', unsafe_allow_html=True)
 sentiment_mapping = [":red[:material/thumb_down:]", ":green[:material/thumb_up:]"]
 st.sidebar.markdown('<div style="text-align: justify;"></br></br>How do you like this app?</div>', unsafe_allow_html=True)
 selected = st.sidebar.feedback("thumbs")

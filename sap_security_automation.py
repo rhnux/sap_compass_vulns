@@ -152,9 +152,7 @@ class SAPCVEAutomation:
                     result = subprocess.run(cmd, capture_output=True, text=True, timeout=300) # Timeout de 5 mins por lote
 
                     if result.returncode != 0:
-                        console.print(f"⚠️  Lote {num_lote} falló. Código: {result.returncode}.")
-                        if result.stderr:
-                            console.print(f"   STDERR: {result.stderr.strip()[:200]}...")
+                        console.print(f"   STDERR: {result.stderr.strip()[:200]}...")
                         continue
 
                     time.sleep(2) # Esperar que se escriba el archivo

@@ -50,7 +50,7 @@ def fetch_epss_data(cve):
     return [float(l['epss'])*100 for l in reversed(epss_ts['time-series'])]
 
 # Select A+|1+ CVEs & Get EPSS data of TOP Priorities CVEs
-@st.cache_datat
+@st.cache_data
 def sap_cve_top_priority(xdf):
     #sap_cve_top = xdf[(xdf['priority_l'].isin(['A+', 'B'])) | (xdf['priority'] == 'Priority 1+')]
     sap_cve_top = xdf[(xdf['priority_l'].isin(['A+'])) |

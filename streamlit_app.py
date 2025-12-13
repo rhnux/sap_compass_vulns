@@ -128,7 +128,7 @@ else:
 
 
 # Sidebar
-st.sidebar.markdown('<div style="text-align: center;">Last updated 11-11-2025</div>', unsafe_allow_html=True)
+st.sidebar.markdown('<div style="text-align: center;">Last updated 09-12-2025</div>', unsafe_allow_html=True)
 sentiment_mapping = [":red[:material/thumb_down:]", ":green[:material/thumb_up:]"]
 st.sidebar.markdown('<div style="text-align: justify;"></br></br>How do you like this app?</div>', unsafe_allow_html=True)
 selected = st.sidebar.feedback("thumbs")
@@ -147,7 +147,7 @@ st.sidebar.caption(":blue[:material/south_america:] :blue-badge[AR]")
 #st.toast('New 2024 CWE Top 25 for Rethink process', icon=":material/emergency_heat:")
 
 
-with st.expander(f"Vulnerability Summary {ref_data_from}-2025", expanded=False, icon=":material/explore:"):
+with st.expander(f"Vulnerability Summary {ref_data_from}-2025", expanded=True, icon=":material/explore:"):
     st.header(f"From January {ref_data_from} to date, :blue[{df.shape[0]} SAP Notes] related to :orange[{len(df['cve_id'].unique())} CVE-IDs] are reported.", anchor=False)
 
     count_by_month = df.groupby([df['datePublished'].dt.to_period('M'), 'Priority']).size().reset_index(name='v')

@@ -12,7 +12,7 @@ import re
 @st.cache_data
 def load_data(use_history_file):
     if use_history_file:
-        df = pd.read_csv('data/sap_all_order.csv')
+        df = pd.read_csv('data/sap_cve_old_all.csv')
     else:
         df = pd.read_csv('data/sap_cve_2025_aws.csv')
     df.sort_values(by='cve_id', inplace=True)

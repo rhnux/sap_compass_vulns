@@ -303,7 +303,7 @@ if on:
         kev = top_vs[top_vs['kev']]
         cweT25 = top_vs[top_vs['cwe_t25']]
         
-        tab1, tab2 = st.tabs(["Vunls Top Priority", "CVE Info"])
+        tab1, tab2, tab3 = st.tabs(["Vunls Top Priority", "CVE Info", "DataFlow"])
         with tab1:
             st.header(f":violet[Top {top}] Priority Vulnerabilities of :blue[{filtered_df.shape[0]}] selected SAP Notes", anchor=False)
             st.header(f':orange[{top_vs.shape[0]}] Unique CVE-IDs & :red[{kev.shape[0]} on KEV]', anchor=False)
@@ -348,7 +348,11 @@ if on:
             fig_tm = px.treemap(top_vs, path=[px.Constant("CVE Details"), 'Priority', 'sap_note_year', 'priority', 'priority_l'], values='composite_score')
             fig_tm.update_traces(marker_colorscale=['#5eadf2','#3b2e8c','#04adbf','#ba38f2','#ff1493'])                                        
             fig_tm.update_layout(margin = dict(t=50, l=25, r=25, b=25))
-            st.plotly_chart(fig_tm, theme=None, use_container_width=True)    
+            st.plotly_chart(fig_tm, theme=None, use_container_width=True)
+
+        with tab3:
+            st.subheader(':primary[Data Flow] Diagram', anchor=False)
+            st.image('assets/data_flow.svg', width='stretch')     
     st.divider()
 
 st.header(f":violet[{filtered_df.shape[0]}] Selected Vulnerabilities", anchor=False)

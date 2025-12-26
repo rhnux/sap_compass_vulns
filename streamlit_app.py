@@ -303,7 +303,7 @@ if on:
         kev = top_vs[top_vs['kev']]
         cweT25 = top_vs[top_vs['cwe_t25']]
         
-        tab1, tab2, tab3 = st.tabs(["Vunls Top Priority", "CVE Info", "DataFlow"])
+        tab1, tab2 = st.tabs(["Vunls Top Priority", "CVE Info"])
         with tab1:
             st.header(f":violet[Top {top}] Priority Vulnerabilities of :blue[{filtered_df.shape[0]}] selected SAP Notes", anchor=False)
             st.header(f':orange[{top_vs.shape[0]}] Unique CVE-IDs & :red[{kev.shape[0]} on KEV]', anchor=False)
@@ -349,10 +349,7 @@ if on:
             fig_tm.update_traces(marker_colorscale=['#5eadf2','#3b2e8c','#04adbf','#ba38f2','#ff1493'])                                        
             fig_tm.update_layout(margin = dict(t=50, l=25, r=25, b=25))
             st.plotly_chart(fig_tm, theme=None, use_container_width=True)
-
-        with tab3:
-            st.subheader(':primary[Data Flow] Diagram', anchor=False)
-            st.image('assets/data_flow.svg', width='stretch')     
+  
     st.divider()
 
 st.header(f":violet[{filtered_df.shape[0]}] Selected Vulnerabilities", anchor=False)
@@ -465,9 +462,10 @@ with st.expander("Comparative Analysis: Vulnerabilities by Month across Years",
 
     
     # Crear tabs para diferentes visualizaciones
-    tab1, tab2, tab3 = st.tabs([":material/show_chart: Line Chart",
+    tab1, tab2, tab3, tab4 = st.tabs([":material/show_chart: Line Chart",
                                 ":material/bar_chart_4_bars: Bar Chart",
-                                ":material/shadow_add: Summary"])
+                                ":material/shadow_add: Summary",
+                                ":material/network_intel_node: Data Model"])
     
     with tab1:
         st.subheader("Trend Analysis: Monthly Vulnerabilities by Year", anchor=False)
@@ -562,6 +560,10 @@ with st.expander("Comparative Analysis: Vulnerabilities by Month across Years",
             'Total': pivot_data.sum(axis=1)
         })
         st.dataframe(stats_df, hide_index=True, width='stretch')
+
+    with tab4:
+            st.subheader(':primary[Data Flow] Diagram', anchor=False)
+            st.image('assets/data_flow_rich.svg', width='stretch')
 
 # Continúa con el resto del código original...# ...existing code...
 

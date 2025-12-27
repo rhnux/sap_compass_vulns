@@ -8,25 +8,25 @@ El siguiente diagrama Mermaid ilustra el flujo de datos a través de los diferen
 
 ```mermaid
 graph TD
-    subgraph "1. Recopilación y Enriquecimiento de Datos"
-        A[Jupyter Notebooks<br>(e.g., get_SAP_CVEs.ipynb)] -- Lista de CVEs cruda --> B(sap_cve_updater_v3.py);
-        C[sploitscan CLI] -- CVSS, EPSS, KEV --> B;
-        D[cve_prioritizer CLI] -- Puntuación de Prioridad --> B;
-        E[Datos Estáticos<br>(data/cwe_top_25_2024.csv)]
-    end
+  subgraph "1. Recopilación y Enriquecimiento de Datos"
+    A["Jupyter Notebooks\n(e.g., get_SAP_CVEs.ipynb)"] --> B["sap_cve_updater_v3.py"]
+    C["sploitscan CLI"] --> B
+    D["cve_prioritizer CLI"] --> B
+    E["Datos Estáticos\n(data/cwe_top_25_2024.csv)"]
+  end
 
-    subgraph "2. Almacenamiento Intermedio"
-        B -- CSV Enriquecido --> F[data/*.csv<br>(Archivos Intermedios)];
-        G[sap_utils.py merge] -- Combina CSVs --> H[Datasets Maestros<br>(data/sap_all_order.csv, data/sap_cve_2025_aws.csv)];
-    end
+  subgraph "2. Almacenamiento Intermedio"
+    B --> F["data/*.csv\n(Archivos Intermedios)"]
+    G["sap_utils.py\nmerge"] --> H["Datasets Maestros\n(data/sap_all_order.csv, data/sap_cve_2025_aws.csv)"]
+  end
 
-    subgraph "3. Capa de Presentación (Streamlit)"
-        H -- Carga en el inicio --> I{streamlit_app.py};
-        E -- Carga en el inicio --> I;
-        J[API Externa<br>(api.first.org)] -- Datos de tendencia EPSS en vivo --> I;
-        I -- Cálculo en memoria<br>('Rethink Priority Score') --> K[Dashboard Interactivo];
-        L[Usuario] --> K;
-    end
+  subgraph "3. Capa de Presentación (Streamlit)"
+    H --> I["streamlit_app.py"]
+    E --> I
+    J["API Externa\n(api.first.org)"] --> I
+    I -- "Cálculo en memoria\n(Rethink Priority Score)" --> K["Dashboard Interactivo"]
+    L["Usuario"] --> K
+  end
 
 ```
 

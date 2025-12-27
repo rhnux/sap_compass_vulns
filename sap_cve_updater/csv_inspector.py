@@ -4,6 +4,12 @@ CSV Inspector - Diagnóstico rápido de CSV
 Muestra información detallada sobre el archivo CSV
 """
 
+try:
+    from rhnux_ansi import display_ansi_art
+    display_ansi_art()
+except ImportError:
+    pass
+
 import csv
 import sys
 import re

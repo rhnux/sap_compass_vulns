@@ -4,6 +4,12 @@ SAP Security Utils
 Utilidades para el proyecto SAP Compass Vulns
 """
 
+try:
+    from rhnux_ansi import display_ansi_art
+    display_ansi_art()
+except ImportError:
+    pass
+
 import csv
 import json
 import sys

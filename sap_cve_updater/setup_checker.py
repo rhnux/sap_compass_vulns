@@ -4,6 +4,12 @@ SAP CVE Updater - Setup and Environment Checker
 Verifica y configura el entorno necesario para ejecutar el updater
 """
 
+try:
+    from rhnux_ansi import display_ansi_art
+    display_ansi_art()
+except ImportError:
+    pass
+
 import os
 import sys
 import subprocess

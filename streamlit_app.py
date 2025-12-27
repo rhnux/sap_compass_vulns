@@ -137,6 +137,8 @@ if selected is not None:
 st.sidebar.caption("Info and Details")
 st.sidebar.caption(":blue[:material/neurology:] [SAP Vulnerabilities - CVE-IDs](https://dso-days-siteblog.vercel.app/blog/sap-cve-ids/)")
 st.sidebar.caption(":blue[:material/neurology:] [SAP Vulnerabilities Summary 2024](https://dso-days-siteblog.vercel.app/blog/2024-sap-compass-vulns-summary/)")
+st.sidebar.caption(":blue[:material/neurology:] [SAP Panorama Security Notes en 2025](https://dso-days-siteblog.vercel.app/blog/202508-sap-compass-data-review/)")   
+st.sidebar.caption(":blue[:material/neurology:] [SAP Vulnerabilities Summary 2025](https://dso-days-siteblog.vercel.app/blog/2025-sap-compass-vulns-summary/)")
 
 st.sidebar.caption(":blue[:material/south_america:] :blue-badge[AR]")
 

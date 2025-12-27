@@ -5,6 +5,12 @@ Actualiza datos de CVEs usando SploitScan y CVE_Prioritizer
 Mantiene EXACTAMENTE la misma estructura del CSV original
 """
 
+try:
+    from rhnux_ansi import display_ansi_art
+    display_ansi_art()
+except ImportError:
+    pass
+
 import os
 import sys
 import csv

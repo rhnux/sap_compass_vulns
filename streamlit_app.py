@@ -112,7 +112,7 @@ st.set_page_config(
 )
 
 # UI Components
-st.logo("assets/logo.png", link="https://dub.sh/dso-days", icon_image="assets/logo.png", size='large')
+st.logo("static/logo.png", link="https://dub.sh/dso-days", icon_image="static/logo.png", size='large')
 
 sac.divider(label="<img height='96' width='96' src='https://cdn.simpleicons.org/SAP/white' /> Compass Priority Vulnerabilities", color='#ffffff')
 
@@ -565,7 +565,7 @@ with st.expander("Comparative Analysis: Vulnerabilities by Month across Years",
 
     with tab4:
             st.subheader(':primary[Data Flow] Diagram', anchor=False)
-            st.image('assets/data_flow_rich.svg', width='stretch')
+            st.image('static/data_flow_rich.svg', width='stretch')
 
 # Continúa con el resto del código original...# ...existing code...
 

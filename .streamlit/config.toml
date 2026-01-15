@@ -207,6 +207,7 @@
 
 # Default: false
 # enableStaticServing = false
+enableStaticServing = true
 
 # Server certificate file for connecting via HTTPS.
 # Must be set at the same time as "server.sslKeyFile".

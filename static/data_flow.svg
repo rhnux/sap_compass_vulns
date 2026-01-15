@@ -1,0 +1,104 @@
+<svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg" style="background:#050505; font-family: 'Inter', sans-serif;">
+  <defs>
+    <!-- Filtros de Resplandor (Glow) -->
+    <filter id="glow-blue" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="glow-red" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    
+    <!-- Gradientes -->
+    <linearGradient id="line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2D5BFF; stop-opacity:0" />
+      <stop offset="50%" style="stop-color:#FF4B4B; stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2D5BFF; stop-opacity:0" />
+    </linearGradient>
+
+    <!-- Animación de partículas -->
+    <circle id="particle" r="2" fill="#FF4B4B">
+      <animateMotion dur="3s" repeatCount="indefinite" path="M 150 300 Q 300 300 450 300" />
+    </circle>
+  </defs>
+
+  <!-- Fondo Decorativo: Rejilla sutil -->
+  <path d="M 0 0 L 1000 0 M 0 100 L 1000 100 M 0 200 L 1000 200 M 0 300 L 1000 300 M 0 400 L 1000 400 M 0 500 L 1000 500" stroke="#111" stroke-width="1" fill="none" />
+  <path d="M 0 0 L 0 600 M 100 0 L 100 600 M 200 0 L 200 600 M 300 0 L 300 600 M 400 0 L 400 600 M 500 0 L 500 600 M 600 0 L 600 600 M 700 0 L 700 600 M 800 0 L 800 600 M 900 0 L 900 600" stroke="#111" stroke-width="1" fill="none" />
+
+  <!-- CONEXIONES (CURVAS DE BÉZIER) -->
+  <g fill="none" stroke-width="2" opacity="0.6">
+    <!-- De SAP a Scraper -->
+    <path d="M 120 300 Q 200 300 280 150" stroke="#2D5BFF" stroke-dasharray="5,5" />
+    <path d="M 120 300 Q 200 300 280 450" stroke="#2D5BFF" stroke-dasharray="5,5" />
+    <!-- De Scripts a Core -->
+    <path d="M 420 150 Q 500 300 550 300" stroke="#FF4B4B" />
+    <path d="M 420 450 Q 500 300 550 300" stroke="#FF4B4B" />
+    <!-- De Core a Store -->
+    <path d="M 700 300 L 800 300" stroke="url(#line-grad)" stroke-width="3" />
+  </g>
+
+  <!-- NODOS NIVEL 1: FUENTES -->
+  <g transform="translate(50, 270)">
+    <path d="M 0 10 Q 0 0 10 0 L 80 0 Q 90 0 90 10 L 90 50 Q 90 60 80 60 L 10 60 Q 0 60 0 50 Z" fill="rgba(45, 91, 255, 0.1)" stroke="#2D5BFF" stroke-width="1" />
+    <text x="45" y="35" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">SAP RSS/API</text>
+    <text x="45" y="50" text-anchor="middle" fill="#2D5BFF" font-size="9">Raw Data Source</text>
+  </g>
+
+  <!-- NODOS NIVEL 2: PROCESAMIENTO PROFUNDO -->
+  <!-- Script de Scraping -->
+  <g transform="translate(280, 100)">
+    <rect width="160" height="80" rx="15" fill="rgba(255,255,255,0.05)" stroke="#444" />
+    <text x="20" y="30" fill="#FF4B4B" font-size="11" font-weight="bold">get_notes.py</text>
+    <text x="20" y="50" fill="#888" font-size="10">· Session Handling</text>
+    <text x="20" y="65" fill="#888" font-size="10">· JSON Payload Extraction</text>
+    <circle cx="150" cy="15" r="4" fill="#2ea44f" filter="url(#glow-blue)" />
+  </g>
+
+  <!-- Script de Parsing -->
+  <g transform="translate(280, 400)">
+    <rect width="160" height="90" rx="15" fill="rgba(255,255,255,0.05)" stroke="#444" />
+    <text x="20" y="30" fill="#FF4B4B" font-size="11" font-weight="bold">parse_cvss.py</text>
+    <text x="20" y="50" fill="#888" font-size="10">· Vector Translation (v3.1)</text>
+    <text x="20" y="65" fill="#888" font-size="10">· Severity Mapping</text>
+    <text x="20" y="80" fill="#888" font-size="10">· Component Tagging</text>
+  </g>
+
+  <!-- NODOS NIVEL 3: EL MOTOR CENTRAL (DATA CONSOLIDATION) -->
+  <g transform="translate(550, 240)">
+    <!-- Forma Hexagonal Estilizada -->
+    <path d="M 30 0 L 120 0 L 150 60 L 120 120 L 30 120 L 0 60 Z" fill="rgba(255, 75, 75, 0.1)" stroke="#FF4B4B" stroke-width="2" filter="url(#glow-red)" />
+    <text x="75" y="55" text-anchor="middle" fill="#fff" font-size="14" font-weight="bold">ETL ENGINE</text>
+    <text x="75" y="75" text-anchor="middle" fill="#FF4B4B" font-size="10">Dataset Merger</text>
+    <text x="75" y="90" text-anchor="middle" fill="#888" font-size="9">Minifying JSON...</text>
+  </g>
+
+  <!-- NODOS NIVEL 4: DELIVERY -->
+  <g transform="translate(820, 250)">
+    <rect width="140" height="100" rx="20" fill="none" stroke="#2D5BFF" stroke-width="1" stroke-dasharray="4" />
+    <text x="70" y="30" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">STREAMLIT UI</text>
+    <!-- Barras de Gráfico pequeñas representando el Dash -->
+    <rect x="30" y="50" width="10" height="30" fill="#FF4B4B" opacity="0.8" />
+    <rect x="50" y="40" width="10" height="40" fill="#FF4B4B" opacity="0.5" />
+    <rect x="70" y="60" width="10" height="20" fill="#2D5BFF" opacity="0.8" />
+    <text x="70" y="90" text-anchor="middle" fill="#888" font-size="9">Interactive Visualization</text>
+  </g>
+
+  <!-- ANIMACIONES DE FLUJO (Partículas de datos) -->
+  <circle r="3" fill="#FF4B4B">
+    <animateMotion dur="4s" repeatCount="indefinite" path="M 440 140 Q 500 300 550 300" />
+  </circle>
+  <circle r="3" fill="#2D5BFF">
+    <animateMotion dur="3s" repeatCount="indefinite" path="M 440 450 Q 500 300 550 300" />
+  </circle>
+  <circle r="4" fill="#fff" filter="url(#glow-blue)">
+    <animateMotion dur="5s" repeatCount="indefinite" path="M 700 300 L 820 300" />
+  </circle>
+
+  <!-- Etiquetas de Tecnología -->
+  <g transform="translate(450, 550)">
+    <text x="0" y="0" fill="#444" font-size="10">Powered by:</text>
+    <text x="70" y="0" fill="#888" font-size="10">Python 3.10 • GitHub Actions • Pandas • Streamlit</text>
+  </g>
+</svg>

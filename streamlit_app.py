@@ -12,9 +12,9 @@ import re
 @st.cache_data
 def load_data(use_history_file):
     if use_history_file:
-        df = pd.read_csv('data/sap_cve_old_all.csv')
+        df = pd.read_csv('data/sap_cve_all_2026.csv')
     else:
-        df = pd.read_csv('data/sap_cve_2025_aws.csv')
+        df = pd.read_csv('data/sap_cve_2026.csv')
     df.sort_values(by='cve_id', inplace=True)
     cwe_top_25 = pd.read_csv('data/cwe_top_25_2024.csv')
     ll_cwe_t25 = list(cwe_top_25['ID'])

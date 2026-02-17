@@ -78,7 +78,7 @@ smmap==5.0.1
 sniffio==1.3.1
 soupsieve==2.6
 sploitscan==0.14.3
-streamlit==1.52.1
+streamlit==1.54.0
 streamlit-antd-components==0.3.2
 tabula==1.0.5
 tabula-py==2.10.0

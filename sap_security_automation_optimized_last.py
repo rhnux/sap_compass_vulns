@@ -117,12 +117,22 @@ class SAPCVEAutomation:
     
     # ==================== EXTRACCIÓN SAP ====================
     
-    def extract_sap_data(self, year: int, month: int) -> pd.DataFrame:
-        """Extrae datos de SAP Security Notes"""
-        month_name = self.months.get(month, '')
-        url = f"https://support.sap.com/en/my-support/knowledge-base/security-notes-news/{month_name}-{year}.html"
+    def extract_sap_data(self, year: int, month: Optional[int] = None, archive: bool = False) -> pd.DataFrame:
+        """Extrae datos de SAP Security Notes
         
-        console.print(f"🔡 Extrayendo: {month_name.title()} {year}")
+        Args:
+            year: Año
+            month: Mes (1-12), no requerido si archive=True
+            archive: Si True, usa URL de bulletins para años terminados
+        """
+        if archive:
+            url = f"https://support.sap.com/en/my-support/knowledge-base/security-notes-news/bulletin-{year}.html"
+            console.print(f"🔡 Extrayendo archivo: {year}")
+        else:
+            month_name = self.months.get(month, '')
+            url = f"https://support.sap.com/en/my-support/knowledge-base/security-notes-news/{month_name}-{year}.html"
+            console.print(f"🔡 Extrayendo: {month_name.title()} {year}")
+        
         console.print(f"🌐 URL: {url}")
         
         resp = requests.get(url, timeout=30)
@@ -572,9 +582,18 @@ class SAPCVEAutomation:
         sap_df: pd.DataFrame,
         sploitscan_df: pd.DataFrame,
         prioritizer_file: str,
-        year: int
+        year: int,
+        archive: bool = False
     ) -> pd.DataFrame:
-        """Combina todos los resultados"""
+        """Combina todos los resultados
+        
+        Args:
+            sap_df: DataFrame de datos SAP
+            sploitscan_df: DataFrame de resultados SploitScan
+            prioritizer_file: Ruta del archivo de CVE_Prioritizer
+            year: Año del análisis
+            archive: Si True, asegura que todas las columnas esperadas estén presentes
+        """
         console.print("🔗 Combinando resultados...")
         
         try:
@@ -613,8 +632,16 @@ class SAPCVEAutomation:
                 'product', 'vector', 'sap_note_year'
             ]
             
-            existing_cols = [col for col in final_cols if col in result_df.columns]
-            result_df = result_df[existing_cols]
+            # En modo archive, asegurar que todas las columnas estén presentes
+            if archive:
+                for col in final_cols:
+                    if col not in result_df.columns:
+                        result_df[col] = None
+                result_df = result_df[final_cols]
+            else:
+                # Modo normal: solo incluir columnas existentes
+                existing_cols = [col for col in final_cols if col in result_df.columns]
+                result_df = result_df[existing_cols]
             
             console.print(f"✅ Total registros: {len(result_df)}")
             return result_df
@@ -662,7 +689,8 @@ class SAPCVEAutomation:
 @app.command()
 def analyze(
     year: int = typer.Option(None, help="Año"),
-    month: int = typer.Option(None, help="Mes (1-12)"),
+    month: int = typer.Option(None, help="Mes (1-12), no requerido con --archive"),
+    archive: bool = typer.Option(False, "--archive", help="Usar datos archivados (bulletins de años terminados)"),
     skip_sploitscan: bool = typer.Option(False, "--skip-sploitscan"),
     skip_prioritizer: bool = typer.Option(False, "--skip-prioritizer"),
     sploitscan_path: str = typer.Option(".", help="Path SploitScan"),
@@ -675,20 +703,31 @@ def analyze(
     
     # Defaults
     year = year or datetime.now().year
-    month = month or datetime.now().month
     
-    if not (1 <= month <= 12):
-        console.print("❌ Mes debe ser 1-12")
-        raise typer.Exit(1)
+    if archive:
+        # Modo archivo: no se requiere mes
+        month = None
+        file_suffix = f"{year}_bulletin"
+        mode_label = f"📦 Bulletin {year}"
+    else:
+        # Modo normal: mes es requerido
+        month = month or datetime.now().month
+        if not (1 <= month <= 12):
+            console.print("❌ Mes debe ser 1-12")
+            raise typer.Exit(1)
+        file_suffix = f"{year}{month:02d}"
+        mode_label = f"📅 {month:02d}/{year}"
     
     # Header
     console.print("="*60)
     console.print("🔒 SAP CVE AUTOMATION - OPTIMIZADO")
     console.print("="*60)
-    console.print(f"📅 Periodo: {month:02d}/{year}")
+    console.print(f"{mode_label}")
     console.print(f"🔍 SploitScan: {'❌ No' if skip_sploitscan else '✅ Sí'}")
     console.print(f"📊 Prioritizer: {'❌ No' if skip_prioritizer else '✅ Sí'}")
     console.print(f"⚙️ Lote: {batch_size} | Workers: {max_workers}")
+    if archive:
+        console.print(f"📦 Modo: Archivo (Bulletin)")
     console.print("="*60)
     
     automation = SAPCVEAutomation()
@@ -696,7 +735,7 @@ def analyze(
     # PASO 1: Extraer SAP
     console.print("\n1️⃣ EXTRAYENDO DATOS SAP")
     console.print("-" * 40)
-    sap_data = automation.extract_sap_data(year, month)
+    sap_data = automation.extract_sap_data(year, month, archive)
     
     # PASO 2: Procesar
     console.print("\n2️⃣ PROCESANDO DATOS")
@@ -722,7 +761,7 @@ def analyze(
         
         if sploitscan_file:
             source = os.path.join(sploitscan_path, sploitscan_file) if sploitscan_path != "." else sploitscan_file
-            dest = automation.output_dir / f"sploitscan_{year}{month:02d}.json"
+            dest = automation.output_dir / f"sploitscan_{file_suffix}.json"
             try:
                 shutil.copy(source, dest)
                 sploitscan_df = automation.dataframeSplotscan(str(dest))
@@ -737,7 +776,7 @@ def analyze(
         console.print("\n4️⃣ CVE_PRIORITIZER")
         console.print("-" * 40)
         
-        csv_file = f"prioritizer_{year}{month:02d}.csv"
+        csv_file = f"prioritizer_{file_suffix}.csv"
         if automation.run_cve_prioritizer(cve_list, csv_file, prioritizer_path):
             source = os.path.join(prioritizer_path, csv_file) if prioritizer_path != "." else csv_file
             dest = automation.output_dir / csv_file
@@ -752,12 +791,12 @@ def analyze(
     # PASO 5: Combinar
     console.print("\n5️⃣ COMBINANDO")
     console.print("-" * 40)
-    final_df = automation.merge_results(sap_df, sploitscan_df, prioritizer_file, year)
+    final_df = automation.merge_results(sap_df, sploitscan_df, prioritizer_file, year, archive)
     
     # PASO 6: Guardar
     console.print("\n6️⃣ GUARDANDO")
     console.print("-" * 40)
-    output_name = output_name or f"sap_cve_{year}{month:02d}"
+    output_name = output_name or f"sap_cve_{file_suffix}"
     output_file = automation.save_results(final_df, output_name)
     
     # Resumen

@@ -173,7 +173,7 @@ sap_cve_updater/check*.json
 sap_cve_updater/cve_prioritizer_logs.txt
 sap_cve_updater/update_log.txt
 sap_cve_updater/*.csv
-
+config.json
 
 # Vercel
 =======
